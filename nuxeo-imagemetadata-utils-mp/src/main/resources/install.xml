@@ -1,0 +1,7 @@
+<install>
+  <copy dir="${package.root}/install/bundles" todir="${env.bundles}"
+    overwriteIfNewerVersion="true" />
+
+  <copy dir="${package.root}/lib" todir="${env.lib}"
+    overwriteIfNewerVersion="true" />
+</install>
