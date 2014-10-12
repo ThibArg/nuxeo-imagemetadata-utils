@@ -22,6 +22,8 @@ import org.nuxeo.imagemetadata.ImageMetadataConstants.RESOLUTION_UNITS;
  * Utility to split the "nnnxnnn" into 2 values expressed in DPI
  * It is mainly about converting from PixelsPerCentimeter to PerInch
  * 1 pixel/centimeter  =  2.54 dot/inch
+ *
+ * inCurrentUnit must be one of ImageMetadataConstants.RESOLUTION_UNITS
  */
 public class XYResolutionDPI {
     protected int x;

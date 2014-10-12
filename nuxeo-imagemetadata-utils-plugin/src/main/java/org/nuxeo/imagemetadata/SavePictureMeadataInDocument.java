@@ -46,7 +46,7 @@ import org.nuxeo.imagemetadata.ImageMetadataConstants.*;
     "id" : "ExtractMetadataInDocument",
     "label" : "Save Picture Metadata in Document",
     "category" : "Document",
-    "description" : "Extract the metadata from the picture strored in the <code>xpath</code> field.<p><code>properties</code> (optionnal) contains a list of <code>xpath=Metadata Key</code> where Metadata Key is the exact name (case sensitive) of a property to retrieve.</p><p>If <code>properties</code> is not used, the operation extracts <code>width</code>, <code>height</code>, <code>resolution</code> and <code>colorspace</code> from the picture file, and save the values in the <code>image_metadata</code> schema (the DPI is realigned if needed.)</p><p>There is a special property: If you pass <code>schemaprefix:field=all</code>, then all the properties are returned (the field must be a String field)</p>",
+    "description" : "Extract the metadata from the picture strored in the <code>xpath</code> field.<p><code>properties</code> (optional) contains a list of <code>xpath=Metadata Key</code> where Metadata Key is the exact name (case sensitive) of a property to retrieve.</p><p>If <code>properties</code> is not used, the operation extracts <code>width</code>, <code>height</code>, <code>resolution</code> and <code>colorspace</code> from the picture file, and save the values in the <code>image_metadata</code> schema (the DPI is realigned if needed.)</p><p>There is a special property: If you pass <code>schemaprefix:field=all</code>, then all the properties are returned (the field must be a String field)</p>",
     "url" : "ExtractMetadataInDocument",
     "requires" : null,
     "signature" : [ "document", "document", "documents", "documents" ],
@@ -74,7 +74,7 @@ import org.nuxeo.imagemetadata.ImageMetadataConstants.*;
     } ]
   }
  */
-@Operation(id = SavePictureMeadataInDocument.ID, category = Constants.CAT_DOCUMENT, label = "Save Picture Metadata in Document", description = "Extract the metadata from the picture strored in the <code>xpath</code> field.<p><code>properties</code> (optionnal) contains a list of <code>xpath=Metadata Key</code> where Metadata Key is the exact name (case sensitive) of a property to retrieve.</p><p>If <code>properties</code> is not used, the operation extracts <code>width</code>, <code>height</code>, <code>resolution</code> and <code>colorspace</code> from the picture file, and save the values in the <code>image_metadata</code> schema (the DPI is realigned if needed.)</p><p>There is a special property: If you pass <code>schemaprefix:field=all</code>, then all the properties are returned (the field must be a String field)</p>")
+@Operation(id = SavePictureMeadataInDocument.ID, category = Constants.CAT_DOCUMENT, label = "Save Picture Metadata in Document", description = "Extract the metadata from the picture strored in the <code>xpath</code> field.<p><code>properties</code> (optional) contains a list of <code>xpath=Metadata Key</code> where Metadata Key is the exact name (case sensitive) of a property to retrieve. For example: <code>dc:format=Format</code></p><p>If <code>properties</code> is not used, the operation extracts <code>width</code>, <code>height</code>, <code>resolution</code> and <code>colorspace</code> from the picture file, and save the values in the <code>image_metadata</code> schema (the DPI is realigned if needed.)</p><p>There is a special property: If you pass <code>schemaprefix:field=all</code>, then all the properties are returned (the field must be a String field)</p>")
 public class SavePictureMeadataInDocument {
 
     public static final String ID = "ExtractMetadataInDocument";
@@ -100,24 +100,27 @@ public class SavePictureMeadataInDocument {
     protected boolean save = true;
 
     @OperationMethod(collector = DocumentModelCollector.class)
-    public DocumentModel run(DocumentModel inDoc) throws PropertyException,
+    public DocumentModel run(DocumentModel inDoc) throws ClientException,
             ClientException, InfoException {
         // We do nothing if we don't have the correct kind of document.
         // We could return an error, but we are more generic here,
-        // avoiding an hassle to the caller (checking the facet and
-        // calling us only if the document is ok)
-        // (could log something, maybe)
+        // avoiding an hassle to the caller.
         // If properties parameter is not used, we check the document has the
         // picture_metadata schema
         boolean hasProperties = properties != null && properties.size() > 0;
-        if (inDoc.isImmutable() || !inDoc.hasSchema("file")
+        if (inDoc.isImmutable()
                 || (!hasProperties && !inDoc.hasSchema("image_metadata"))) {
             return inDoc;
         }
 
         // Get the blob
-        Blob theBlob = (Blob) inDoc.getPropertyValue(xpath);
         // We also give up silently if there is no binary
+        Blob theBlob = null;
+        try {
+            theBlob = (Blob) inDoc.getPropertyValue(xpath);
+        } catch (PropertyException e) {
+            return inDoc;
+        }
         if (theBlob == null) {
             return inDoc;
         }
