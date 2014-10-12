@@ -24,31 +24,80 @@ import org.nuxeo.ecm.automation.core.Constants;
 import org.nuxeo.ecm.automation.core.annotations.Context;
 import org.nuxeo.ecm.automation.core.annotations.Operation;
 import org.nuxeo.ecm.automation.core.annotations.OperationMethod;
+import org.nuxeo.ecm.automation.core.annotations.Param;
 import org.nuxeo.ecm.automation.core.collectors.DocumentModelCollector;
+import org.nuxeo.ecm.automation.core.util.Properties;
 import org.nuxeo.ecm.core.api.Blob;
 import org.nuxeo.ecm.core.api.ClientException;
 import org.nuxeo.ecm.core.api.CoreSession;
 import org.nuxeo.ecm.core.api.DocumentModel;
-import org.nuxeo.ecm.core.api.blobholder.BlobHolder;
 import org.nuxeo.ecm.core.api.model.PropertyException;
 import org.nuxeo.imagemetadata.ImageMetadataConstants.*;
 
 /**
- *  The operation gets the binary of the document (main file, stored in file:content) and
- *  extract the metadata to store it in the "imagemetadata" schema, which is a schema
- *  defined by nuxeo.
- *  You could store the data in another schema (maybe a custom schema with only these
- *  info for example), we use this one because it is convenient and already here.
+ * The operation gets the binary of the document (main file, stored in
+ * file:content) and extract the metadata to store it in the "imagemetadata"
+ * schema, which is a schema defined by nuxeo. You could store the data in
+ * another schema (maybe a custom schema with only these info for example), we
+ * use this one because it is convenient and already here.
  */
-@Operation(id = SavePictureMeadataInDocument.ID, category = Constants.CAT_DOCUMENT, label = "Save Picture Metadata in Document", description = "Extract widht height, resolution and colorspace from the picture file, and save the values in the <code>image_metadata</code> schema")
+/* Copy/paste in the operation registry in Studio
+ {
+    "id" : "ExtractMetadataInDocument",
+    "label" : "Save Picture Metadata in Document",
+    "category" : "Document",
+    "description" : "Extract the metadata from the picture strored in the <code>xpath</code> field.<p><code>properties</code> (optionnal) contains a list of <code>xpath=Metadata Key</code> where Metadata Key is the exact name (case sensitive) of a property to retrieve.</p><p>If <code>properties</code> is not used, the operation extracts <code>width</code>, <code>height</code>, <code>resolution</code> and <code>colorspace</code> from the picture file, and save the values in the <code>image_metadata</code> schema (the DPI is realigned if needed.)</p><p>There is a special property: If you pass <code>schemaprefix:field=all</code>, then all the properties are returned (the field must be a String field)</p>",
+    "url" : "ExtractMetadataInDocument",
+    "requires" : null,
+    "signature" : [ "document", "document", "documents", "documents" ],
+    "params" : [ {
+      "name" : "xpath",
+      "type" : "string",
+      "required" : false,
+      "order" : 0,
+      "widget" : null,
+      "values" : [ "file:content" ]
+    }, {
+      "name" : "properties",
+      "type" : "properties",
+      "required" : false,
+      "order" : 0,
+      "widget" : null,
+      "values" : [ ]
+    }, {
+      "name" : "save",
+      "type" : "boolean",
+      "required" : false,
+      "order" : 0,
+      "widget" : null,
+      "values" : [ "true" ]
+    } ]
+  }
+ */
+@Operation(id = SavePictureMeadataInDocument.ID, category = Constants.CAT_DOCUMENT, label = "Save Picture Metadata in Document", description = "Extract the metadata from the picture strored in the <code>xpath</code> field.<p><code>properties</code> (optionnal) contains a list of <code>xpath=Metadata Key</code> where Metadata Key is the exact name (case sensitive) of a property to retrieve.</p><p>If <code>properties</code> is not used, the operation extracts <code>width</code>, <code>height</code>, <code>resolution</code> and <code>colorspace</code> from the picture file, and save the values in the <code>image_metadata</code> schema (the DPI is realigned if needed.)</p><p>There is a special property: If you pass <code>schemaprefix:field=all</code>, then all the properties are returned (the field must be a String field)</p>")
 public class SavePictureMeadataInDocument {
 
     public static final String ID = "ExtractMetadataInDocument";
 
-    //private static final Log log = LogFactory.getLog(ExtractMetadataInDocument.class);
+    // private static final Log log =
+    // LogFactory.getLog(ExtractMetadataInDocument.class);
 
     @Context
     protected CoreSession session;
+
+    @Param(name = "xpath", required = false, values = {"file:content"})
+    protected String xpath = "file:content";
+
+    //The map has the xpath as key and the metadata property as value:
+    //  dc:description=Colorspace
+    //  dc:format =Format
+    //  dc:nature=Units
+    //      . . .
+    @Param(name = "properties", required = false)
+    protected Properties properties;
+
+    @Param(name = "save", required = false, values = {"true"})
+    protected boolean save = true;
 
     @OperationMethod(collector = DocumentModelCollector.class)
     public DocumentModel run(DocumentModel inDoc) throws PropertyException,
@@ -58,47 +107,80 @@ public class SavePictureMeadataInDocument {
         // avoiding an hassle to the caller (checking the facet and
         // calling us only if the document is ok)
         // (could log something, maybe)
-        if (inDoc.isImmutable() || !inDoc.hasSchema("image_metadata") || ! inDoc.hasSchema("file")) {
+        // If properties parameter is not used, we check the document has the
+        // picture_metadata schema
+        boolean hasProperties = properties != null && properties.size() > 0;
+        if (inDoc.isImmutable() || !inDoc.hasSchema("file")
+                || (!hasProperties && !inDoc.hasSchema("image_metadata"))) {
             return inDoc;
         }
 
-        // Get the main blob
-        Blob theBlob = (Blob) inDoc.getPropertyValue("file:content");
-        if (theBlob == null) {
-            BlobHolder bh = inDoc.getAdapter(BlobHolder.class);
-            if (bh != null) {
-                theBlob = bh.getBlob();
-            }
-        }
+        // Get the blob
+        Blob theBlob = (Blob) inDoc.getPropertyValue(xpath);
         // We also give up silently if there is no binary
         if (theBlob == null) {
             return inDoc;
         }
 
-        // Now, get the metadata. Only some fields
+        // If we have a key-value map, use it.
+        // Else, we just get width, height, resolution and color space and
+        // store the values in the image_metadata fields
         ImageMetadataReader imdr = new ImageMetadataReader(theBlob);
-        METADATA_KEYS[] keys = { METADATA_KEYS.WIDTH, METADATA_KEYS.HEIGHT,
-                            METADATA_KEYS.COLORSPACE, METADATA_KEYS.RESOLUTION,
-                            METADATA_KEYS.UNITS };
-        HashMap<METADATA_KEYS, String> result = imdr.getMetadata(keys);
+        HashMap<String, String> result = null;
+        if (hasProperties) {
+            String xpathForAll = "";
 
-        // Store the values in the schema
-        inDoc.setPropertyValue("imd:pixel_xdimension",
-                                result.get(METADATA_KEYS.WIDTH));
-        inDoc.setPropertyValue("imd:pixel_ydimension",
-                                result.get(METADATA_KEYS.HEIGHT));
-        inDoc.setPropertyValue("imd:color_space",
-                                result.get(METADATA_KEYS.COLORSPACE));
+            //The names of the metadata properties are stored as values in the map
+            String[] keysStr = new String[properties.size()];
+            int idx = 0;
+            for(String inXPath : properties.keySet()) {
+                keysStr[idx] = properties.get(inXPath);
+                if(keysStr[idx].toLowerCase().equals("all")) {
+                    xpathForAll = inXPath;
+                }
 
-        // Resolution needs extra work
-        XYResolutionDPI dpi = new XYResolutionDPI(
-                                result.get(METADATA_KEYS.RESOLUTION),
-                                result.get(METADATA_KEYS.UNITS));
-        inDoc.setPropertyValue("imd:xresolution", dpi.getX());
-        inDoc.setPropertyValue("imd:yresolution", dpi.getY());
+                idx += 1;
+            }
+            result = imdr.getMetadata( keysStr );
+            for(String inXPath : properties.keySet()) {
+                String value = result.get( properties.get(inXPath) );
+                inDoc.setPropertyValue(inXPath, value);
+            }
+
+            if(!xpathForAll.isEmpty()) {
+                inDoc.setPropertyValue(xpathForAll, imdr.getAllMetadata());
+            }
+
+
+        } else {
+
+            String[] keysStr = { METADATA_KEYS.WIDTH.toString(),
+                    METADATA_KEYS.HEIGHT.toString(),
+                    METADATA_KEYS.COLORSPACE.toString(),
+                    METADATA_KEYS.RESOLUTION.toString(),
+                    METADATA_KEYS.UNITS.toString() };
+            result = imdr.getMetadata(keysStr);
+
+            // Store the values in the schema
+            inDoc.setPropertyValue("imd:pixel_xdimension",
+                    result.get(METADATA_KEYS.WIDTH.toString()));
+            inDoc.setPropertyValue("imd:pixel_ydimension",
+                    result.get(METADATA_KEYS.HEIGHT.toString()));
+            inDoc.setPropertyValue("imd:color_space",
+                    result.get(METADATA_KEYS.COLORSPACE.toString()));
+
+            // Resolution needs extra work
+            XYResolutionDPI dpi = new XYResolutionDPI(
+                    result.get(METADATA_KEYS.RESOLUTION.toString()),
+                    result.get(METADATA_KEYS.UNITS.toString()));
+            inDoc.setPropertyValue("imd:xresolution", dpi.getX());
+            inDoc.setPropertyValue("imd:yresolution", dpi.getY());
+        }
 
         // Save the document
-        session.saveDocument(inDoc);
+        if (save) {
+            session.saveDocument(inDoc);
+        }
 
         return inDoc;
     }

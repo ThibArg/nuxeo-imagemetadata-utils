@@ -16,6 +16,7 @@
  */
 package org.nuxeo.imagemetadata;
 
+import java.util.Enumeration;
 import java.util.HashMap;
 
 import org.im4java.core.Info;
@@ -52,6 +53,65 @@ public class ImageMetadataReader {
         filePath = inFullPath;
     }
 
+    public String getAllMetadata() throws InfoException {
+        String result = "";
+
+        Info imageInfo = new Info(filePath);
+
+        Enumeration<String> props = imageInfo.getPropertyNames();
+        while (props.hasMoreElements()) {
+            String propertyName = props.nextElement();
+            result += propertyName + "=" + imageInfo.getProperty(propertyName) + "\n";
+        }
+
+        return result;
+    }
+
+    /*
+     * If inTheseKeys is null or its lenght is 0, then we return all values defined
+     * in METADATA_KEYS (not all the values returned. Just the one in METADATA_KEYS).
+     *
+     * When a value is returned as null (the key does not exist), it is realigned to
+     * the empty string "".
+     */
+    public HashMap<String, String> getMetadata(String[] inTheseKeys) throws InfoException {
+        Info imageInfo = new Info(filePath);
+
+        HashMap<String, String> result = new HashMap<String, String>();
+
+        if (inTheseKeys == null) {
+            for (METADATA_KEYS oneProp : METADATA_KEYS.values()) {
+                String value = imageInfo.getProperty(oneProp.toString());
+                if (value == null) {
+                    value = "";
+                }
+                result.put(oneProp.toString(), value);
+            }
+        } else {
+            for (String oneProp : inTheseKeys) {
+                String value = imageInfo.getProperty(oneProp.toString());
+                if (value == null) {
+                    value = "";
+                }
+                result.put(oneProp, value);
+            }
+        }
+
+        // Handle special case(s)
+        //      - Re-align resolution to 72x72 for GIF
+        String keyResolution = METADATA_KEYS.RESOLUTION.toString();
+        if (result.containsKey(keyResolution)
+                && result.get(keyResolution).isEmpty()) {
+            String format = imageInfo.getProperty(METADATA_KEYS.FORMAT.toString());
+            format = format.toLowerCase();
+            if (format.indexOf("gif") == 0) {
+                result.put(keyResolution, "72x72");
+            }
+        }
+
+        return result;
+    }
+
     /*
      * If inTheseKeys is null, then we return all values defined in METADATA (not
      * all the values returned. Just the one in METADATA).
@@ -62,20 +122,8 @@ public class ImageMetadataReader {
      */
     public HashMap<METADATA_KEYS, String> getMetadata(METADATA_KEYS[] inTheseKeys)
             throws InfoException {
+
         Info imageInfo = new Info(filePath);
-
-        /*  Interesting for debug, to check the properties returned by the command
-        Enumeration<String> props = imageInfo.getPropertyNames();
-        String msg = "";
-        while (props.hasMoreElements()) {
-            String a = props.nextElement();
-            msg += "Property: " + a + ", value: " + imageInfo.getProperty(a)
-                    + "\n";
-
-        }
-        log.warn("\n" + msg);
-        log.warn("\n\n");
-        */
 
         // Get the values
         HashMap<METADATA_KEYS, String> result = new HashMap<METADATA_KEYS, String>();
@@ -109,5 +157,6 @@ public class ImageMetadataReader {
         }
 
         return result;
+
     }
 }
