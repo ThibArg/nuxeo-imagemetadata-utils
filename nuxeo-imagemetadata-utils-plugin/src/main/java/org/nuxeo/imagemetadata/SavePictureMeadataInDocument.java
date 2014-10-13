@@ -41,40 +41,7 @@ import org.nuxeo.imagemetadata.ImageMetadataConstants.*;
  * another schema (maybe a custom schema with only these info for example), we
  * use this one because it is convenient and already here.
  */
-/* Copy/paste in the operation registry in Studio
- {
-    "id" : "ExtractMetadataInDocument",
-    "label" : "Save Picture Metadata in Document",
-    "category" : "Document",
-    "description" : "Extract the metadata from the picture strored in the <code>xpath</code> field.<p><code>properties</code> (optional) contains a list of <code>xpath=Metadata Key</code> where Metadata Key is the exact name (case sensitive) of a property to retrieve.</p><p>If <code>properties</code> is not used, the operation extracts <code>width</code>, <code>height</code>, <code>resolution</code> and <code>colorspace</code> from the picture file, and save the values in the <code>image_metadata</code> schema (the DPI is realigned if needed.)</p><p>There is a special property: If you pass <code>schemaprefix:field=all</code>, then all the properties are returned (the field must be a String field)</p>",
-    "url" : "ExtractMetadataInDocument",
-    "requires" : null,
-    "signature" : [ "document", "document", "documents", "documents" ],
-    "params" : [ {
-      "name" : "xpath",
-      "type" : "string",
-      "required" : false,
-      "order" : 0,
-      "widget" : null,
-      "values" : [ "file:content" ]
-    }, {
-      "name" : "properties",
-      "type" : "properties",
-      "required" : false,
-      "order" : 0,
-      "widget" : null,
-      "values" : [ ]
-    }, {
-      "name" : "save",
-      "type" : "boolean",
-      "required" : false,
-      "order" : 0,
-      "widget" : null,
-      "values" : [ "true" ]
-    } ]
-  }
- */
-@Operation(id = SavePictureMeadataInDocument.ID, category = Constants.CAT_DOCUMENT, label = "Save Picture Metadata in Document", description = "Extract the metadata from the picture strored in the <code>xpath</code> field.<p><code>properties</code> (optional) contains a list of <code>xpath=Metadata Key</code> where Metadata Key is the exact name (case sensitive) of a property to retrieve. For example: <code>dc:format=Format</code></p><p>If <code>properties</code> is not used, the operation extracts <code>width</code>, <code>height</code>, <code>resolution</code> and <code>colorspace</code> from the picture file, and save the values in the <code>image_metadata</code> schema (the DPI is realigned if needed.)</p><p>There is a special property: If you pass <code>schemaprefix:field=all</code>, then all the properties are returned (the field must be a String field)</p>")
+@Operation(id = SavePictureMeadataInDocument.ID, category = Constants.CAT_DOCUMENT, label = "Save Picture Metadata in Document", description = "Extract the metadata from the picture strored in the <code>xpath</code> field. <code>properties</code> (optional) contains a list of <code>xpath=Metadata Key</code> where Metadata Key is the exact name (case sensitive) of a property to retrieve. For example: <code>dc:format=Format</code>If <code>properties</code> is not used, the operation extracts <code>width</code>, <code>height</code>, <code>resolution</code> and <code>colorspace</code> from the picture file, and save the values in the <code>image_metadata</code> schema (the DPI is realigned if needed.)There is a special property: If you pass <code>schemaprefix:field=all</code>, then all the properties are returned (the field must be a String field)")
 public class SavePictureMeadataInDocument {
 
     public static final String ID = "ExtractMetadataInDocument";
