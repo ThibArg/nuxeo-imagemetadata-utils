@@ -39,8 +39,7 @@
     <copy todir="${marketplace}/install/lib" overwrite="true">
       <artifact:set>
         <includes>
-          <artifact groupId="!org.nuxeo*" scope="!test" type="!pom" />
-          <artifact groupId="org.nuxeo.lib*" scope="!test" />
+          <artifact groupId="org.im4java" scope="!test" />
         </includes>
       </artifact:set>
     </copy>
