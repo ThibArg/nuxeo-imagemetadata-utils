@@ -10,7 +10,7 @@ nuxeo-imagemetadata-utils
 
 * [Usage](#usage)
   * [Parameters](#parameters)
-  * [Importing the Operation in your Studio Project](#importing-the-operationinyour-studio-project)
+  * [Importing the Operation in your Studio Project](#importing-the-operation-in-your-studio-project)
   * [Example of Use with Studio](#example-of-use-with-studio)
 * [Installation](#installation)
   * [As Marketplace Package](#using-the-marketplace-package-available-in-the-releases-section-of-this-github-repository)
