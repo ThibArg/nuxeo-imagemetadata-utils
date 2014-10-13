@@ -20,9 +20,6 @@
 
     <copy todir="${marketplace}">
       <fileset dir="src/main/resources" />
-      <filterset>
-        <filter token="VERSION" value="${maven.project.version}" />
-      </filterset>
     </copy>
 
 	<!-- In groupPrefixes, put the main group name of your plug-in --> 
