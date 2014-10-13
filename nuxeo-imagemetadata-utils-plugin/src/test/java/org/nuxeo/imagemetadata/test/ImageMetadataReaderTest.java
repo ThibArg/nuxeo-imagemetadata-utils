@@ -261,5 +261,24 @@ public class ImageMetadataReaderTest {
         service.run(ctx, chain);
 
         assertEquals(changeToken, docPNG.getChangeToken());
+
+
+
+
+        changeToken = docJPEG.getChangeToken();
+        ctx.setInput(docJPEG);
+        chain = new OperationChain("testChain");
+        // Let xpath and save the default values
+        props = new Properties();
+        props.put("dc:description", "Channel depth:red");
+        chain.add(SavePictureMeadataInDocument.ID).set("properties", props);
+        service.run(ctx, chain);
+
+        // Check the doc was modified
+        assertNotSame(changeToken, docJPEG.getChangeToken());
+
+        // Check value for this PNG
+        all = (String) docJPEG.getPropertyValue("dc:description");
+        assertEquals("coucou", all);
     }
 }
