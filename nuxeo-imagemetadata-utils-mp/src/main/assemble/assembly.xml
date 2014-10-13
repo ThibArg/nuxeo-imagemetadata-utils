@@ -1,4 +1,4 @@
-<project name="nuxeo-assembly"
+<project name="image-metadata-assembly"
          default="build"
          xmlns:nx="urn:nuxeo-build"
          xmlns:artifact="urn:nuxeo-artifact">
@@ -12,8 +12,9 @@
     <property name="init.done" value="true" />
   </target>
 
-  <!-- Add a useful description -->
-  <target name="build" depends="init" description="Build Nuxeo Image Metadata Utils">
+  <target name="build"
+          depends="init"
+          description="Build Nuxeo Image Metadata Utils">
     <echo>Build Nuxeo Image Metadata Utils</echo>
     <delete failonerror="false" dir="${marketplace}" />
     <mkdir dir="${marketplace}" />
@@ -22,15 +23,24 @@
       <fileset dir="src/main/resources" />
     </copy>
 
-	<!-- In groupPrefixes, put the main group name of your plug-in --> 
     <artifact:nuxeo-expand includeTestScope="false"
                            groupPrefixes="org.nuxeo.imagemetadata" />
 
     <copy todir="${marketplace}/install/bundles" overwrite="true">
       <artifact:set>
         <includes>
-	      <!-- In groupId, put the main group name of your plug-in -->
-          <artifact groupId="org.nuxeo.imagemetadata" scope="!test" type="!pom" />
+          <artifact groupId="org.nuxeo.imagemetadata"
+                    scope="!test"
+                    type="!pom" />
+        </includes>
+      </artifact:set>
+    </copy>
+
+    <copy todir="${marketplace}/install/lib" overwrite="true">
+      <artifact:set>
+        <includes>
+          <artifact groupId="!org.nuxeo*" scope="!test" type="!pom" />
+          <artifact groupId="org.nuxeo.lib*" scope="!test" />
         </includes>
       </artifact:set>
     </copy>

@@ -1,5 +1,6 @@
 <!-- See documentation at http://doc.nuxeo.com/x/HgIz -->
-<package type="addon" name="nuxeo-imagemetadata-utils-marketplace" version="@VERSION@">
+<package type="addon" name="nuxeo-imagemetadata-utils-marketplace"
+  version="@VERSION@">
   <!-- Give a useful title -->
   <title>Nuxeo Image Metadata Utils</title>
   <description>
@@ -11,7 +12,8 @@
   <installer restart="false" />
   <uninstaller restart="false" />
   <hotreload-support>true</hotreload-support>
-  <require-terms-and-conditions-acceptance>false</require-terms-and-conditions-acceptance>
+  <require-terms-and-conditions-acceptance>false
+  </require-terms-and-conditions-acceptance>
   <nuxeo-validation>none</nuxeo-validation>
   <!-- <nuxeo-validation>inprocess</nuxeo-validation> -->
   <!-- <nuxeo-validation>primary_validation</nuxeo-validation> -->
@@ -21,6 +23,7 @@
   <!-- <production-state>production_ready</production-state> -->
   <supported>false</supported>
   <platforms>
+    <platform>cap-5.9.5</platform>
     <platform>cap-@VERSION@</platform>
   </platforms>
   <!-- Dependencies on other packages -->
