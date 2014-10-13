@@ -12,7 +12,7 @@ nuxeo-imagemetadata-utils
 * [Installation](#installation)
   * [As Marketplace Package](#using-the-marketplace-package-available-in-the-releases-section-of-this-github-repository)
   * [Manual Installation](#manual-installation)
-  * [Building the Plugin](#building-the-plugin)
+* [Building the Plugin](#building-the-plugin)
 * [Third Party Tools Used](#third-party-tools-used)
 * [License](#license)
 * [About Nuxeo](#about-nuxeo)
@@ -80,7 +80,7 @@ Because this operation is not part of the default platform, it is not available 
 ## Installation
 
 #### Using the Marketplace Package Available in the `releases` Section of this GitHub Repository
-The name is `nuxeo-imagemetadata-utils-mp-{version}.zip`, with `{version}` equals to 5.9.5 for example.
+The name is `nuxeo-imagemetadata-utils-mp-5.9.5.zip`.
 
 Download this .zip Marketplace Package and install it on your server:
 * Either from the Admin. Center:
@@ -100,14 +100,15 @@ Download this .zip Marketplace Package and install it on your server:
 
 #### Manual Installation
 You can manually install the plug-in:
-* From the `releases` tab of this repository, download the `manual-install-{version}.zip` file (where `{version}` is 5.9.5 for example). Extract the `.zip`. It contains 2 files: `nuxeo-imagemetadata-utils-plugin-{version}.jar` and `im4java-1.4.0.jar`
+* From the `releases` tab of this repository, download the `ManualInstallation-5.9.5.zip` file. Extract the `.zip`. It contains 2 files: `nuxeo-imagemetadata-utils-plugin-5.9.5.jar` and `im4java-1.4.0.jar`
 * Stop `nuxeo` server
 * Install:
-  * `nuxeo-imagemetadata-utils-plugin-{version}.jar` in `{server-path}/nxserver/bundles`
+  * `nuxeo-imagemetadata-utils-plugin-5.9.5.jar` in `{server-path}/nxserver/bundles`
   * And `im4java-1.4.0.jar` in `{server-path}/nxserver/lib`
 * Start `nuxeo` server
 
-#### Building the Plugin
+
+## Building the Plugin
 You can also download the source code and compile the plug-in. Which is what you will do if you want to change, adapt, etc.
 Assuming [`maven`](http://maven.apache.org) (min. 3.2.1) is installed on your computer:
 ```
@@ -123,6 +124,10 @@ mvn clean install
 * The Marketplace Package is in `nuxeo-imagemetadata-utils/nuxeo-imagemetadata-utils-mp/target`, its name is `nuxeo-imagemetadata-utils-mp-5.9.5.zip`.
 
 If you want to import the source code in Eclipse, you can use `mvn eclipse:eclipse` (after having `mvn install`). Then, in Eclipse, choose "File" > "Import...", select "Existing Projects into Workspace" navigate to the `nuxeo-imagemetadata-utils-plugins` folder and select this folder.
+
+**IMPORTANT**-**WARNING**<br/>
+As of today (2014-10-13), the MarketPlace package generated does not work, intallation on the server will fail. Use the `nuxeo-imagemetadata-utils-mp-5.9.5.zip` in the `releases` tab.
+
 
 ## Third Party Tools Used
 * **`im4java`**<br/>
