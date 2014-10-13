@@ -9,6 +9,9 @@ nuxeo-imagemetadata-utils
 ## Table of Content
 
 * [Usage](#usage)
+  * [Parameters](#parameters)
+  * [Importing the Operation in your Studio Project](#importing-the-operationinyour-studio-project)
+  * [Example of Use with Studio](#example-of-use-with-studio)
 * [Installation](#installation)
   * [As Marketplace Package](#using-the-marketplace-package-available-in-the-releases-section-of-this-github-repository)
   * [Manual Installation](#manual-installation)
@@ -18,6 +21,7 @@ nuxeo-imagemetadata-utils
 * [About Nuxeo](#about-nuxeo)
 
 ## Usage
+#### Parameters
 The plug-in provides the `Save Picture Metadata in Document`, Automation Operation installed in the `Document` topic. This operation expects 3 optional parameters: `xpath`, `properties` and `save`.
 
 * `xpath` is the path to the binary, in the document, holding then picture. It is set by default to `file:content`, which means the default main binary
@@ -70,12 +74,54 @@ Because this operation is not part of the default platform, it is not available 
 
 **Getting the JSON Definition of the Operation**
 * Install the plug-in (see below, "Installation")
-* once the plug-in is installed and the server running:
+* Once the plug-in is installed and the server running:
   * Login as an administrator
   * Then, go to {your-server:port}/nuxeo/site/automation/doc
   * Find the operation (just do a search on the page for `Save Picture Metadata in Document` for example)
   * Click the "JSON Definition" link
   * Copy the JSON definition
+  * WARNING: If the description of the operation contains lines, remove them manually of saving the definition will fail.
+
+
+
+#### Example of Use with Studio
+
+**Update Metadata when a Picture is Created/Modified**<br/>
+We want to update the metadata every time the binary file is modified. Which means, basically, when the document is created or when the user replaces the existing file with another.
+
+To achieve this, we may want to install event handlers for the "Document created" and the "Document modified" events, but this will not work as expected because the default handling of metadata by nuxeo will override our changes: We want to trigger our operation *after* the default behavior is done. The point is that once default behavior is done handling the picture, it fires the `pictureViewsGenerationDone` event. So, we want to call our own operation for this event: This way, we are 100% sure that we can change the metadata. Since the `pictureViewsGenerationDone` event is not (at the time this writing) an event listed by Studio, we must add it to the registry. Here is the full sequence, including the Automation Chain to use:
+
+1. Add the `pictureViewsGenerationDone` event to the "Core Events" registry
+  * See http://doc.nuxeo.com/pages/viewpage.action?pageId=8683799
+  * Go to Settings & Versioning > Registries > Core Events
+  * Paste the following:
+  ```
+  {
+    events: {
+      pictureViewsGenerationDone: "pictureViewsGenerationDone"
+    }
+  }
+  ```
+  * Save
+2. Create a new Event Handler:
+  * Go to Automation > Event Handlers and click "New"
+  * Name your event as you wish. For example, just `pictureViewsGenerationDone`
+  * In "Event Handler Definition", scroll the list of events, you will find your new `pictureViewsGenerationDone` at the end of the list. Select it
+  * In "Event Handler Enablement", just set "Current document is" to "Mutable document" (because we don't want to calculate the data on a version for example, Nuxeo would trigger an error)
+  * In "Event Handler Execution", click the "create" button and name the Automation Chain which will be called for this event. For example, `Picture_GetMetadataAndSave`
+3. Create the Automation Chain
+  * Previous step has already open the `Picture_GetMetadataAndSave` automation chain for you
+  * You chain is just:
+  ```
+  Fetch > Context Document(s)
+  Document > Save Picture Metadata in Document
+    xpath: file:content
+    properties:
+    save: checked
+  ```
+
+**Display the Information**<br/>
+If you used the default parameters, the data is stored in the `image_metadata` schema, prefix `imd`. in your layouts, you can just select this schema in the "Widgets by Properties" drop down, and drag-drop the fiels you want to use.
 
 ## Installation
 
