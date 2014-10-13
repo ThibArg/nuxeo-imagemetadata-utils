@@ -1,17 +1,17 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<project xmlns="http://maven.apache.org/POM/4.0.0"
-  xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/maven-v4_0_0.xsd">
+<project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+  xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/maven-v4_0_0.xsd">
   <modelVersion>4.0.0</modelVersion>
   <parent>
     <groupId>org.nuxeo</groupId>
     <artifactId>nuxeo-addons-parent</artifactId>
-    <version>5.9.5</version>
+    <version>5.9.6-SNAPSHOT</version>
   </parent>
   <groupId>org.nuxeo.imagemetadata</groupId>
   <artifactId>nuxeo-imagemetadata-parent</artifactId>
   <name>Parent Project for Nuxeo Image Metadata Utilities</name>
   <packaging>pom</packaging>
-  <description/>
+  <description />
   <modules>
     <module>nuxeo-imagemetadata-utils-plugin</module>
     <module>nuxeo-imagemetadata-utils-mp</module>
@@ -21,16 +21,22 @@
   </properties>
   <dependencyManagement>
     <dependencies>
-    <dependency>
-      <groupId>org.nuxeo.imagemetadata</groupId>
-      <artifactId>nuxeo-imagemetadata-utils-demo-plugin</artifactId>
-      <version>${nuxeo.imagemetadata.utils.version}</version>
-    </dependency>
-   <dependency>
-      <groupId>org.nuxeo.imagemetadata</groupId>
-      <artifactId>nuxeo-imagemetadata-utils-demo-mp</artifactId>
-      <version>${nuxeo.imagemetadata.utils.version}</version>
-    </dependency>
+      <dependency>
+        <groupId>org.nuxeo.imagemetadata</groupId>
+        <artifactId>nuxeo-imagemetadata-utils-plugin</artifactId>
+        <version>${nuxeo.imagemetadata.utils.version}</version>
+      </dependency>
+      <dependency>
+        <groupId>org.nuxeo.imagemetadata</groupId>
+        <artifactId>nuxeo-imagemetadata-utils-mp</artifactId>
+        <version>${nuxeo.imagemetadata.utils.version}</version>
+      </dependency>
+      <dependency>
+        <groupId>org.im4java</groupId>
+        <artifactId>im4java</artifactId>
+        <version>1.4.0</version>
+        <scope>compile</scope>
+      </dependency>
     </dependencies>
   </dependencyManagement>
   <repositories>
@@ -38,10 +44,10 @@
       <id>nuxeo-studio</id>
       <url>https://connect.nuxeo.com/nuxeo/site/studio/maven</url>
       <releases>
-          <enabled>true</enabled>
+        <enabled>true</enabled>
       </releases>
       <snapshots>
-          <enabled>true</enabled>
+        <enabled>true</enabled>
       </snapshots>
     </repository>
   </repositories>
