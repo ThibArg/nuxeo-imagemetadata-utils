@@ -148,7 +148,7 @@ Download this .zip Marketplace Package and install it on your server:
 
 #### Manual Installation
 You can manually install the plug-in:
-* From the `releases` tab of this repository, download the `ManualInstallation-5.9.6-SNAPSHOT.zip` file. Extract the `.zip`. It contains 2 files: `nuxeo-imagemetadata-utils-plugin-5.9.6-SNAPSHOT.jar` and `im4java-1.4.0.jar`
+* From the `releases` tab of this repository, download the `ManualInstallation` file. Extract the `.zip`. It contains 2 files: `nuxeo-imagemetadata-utils-plugin-5.9.6-SNAPSHOT.jar` and `im4java-1.4.0.jar`
 * Stop `nuxeo` server
 * Install:
   * `nuxeo-imagemetadata-utils-plugin-5.9.6-SNAPSHOT.jar` in `{server-path}/nxserver/bundles`
