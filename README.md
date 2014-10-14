@@ -126,7 +126,7 @@ If you used the default parameters, the data is stored in the `image_metadata` s
 ## Installation
 
 #### Using the Marketplace Package Available in the `releases` Section of this GitHub Repository
-The name is `nuxeo-imagemetadata-utils-mp-5.9.5.zip`.
+The name is `nuxeo-imagemetadata-utils-mp-5.9.6-SNAPSHOT.zip`.
 
 Download this .zip Marketplace Package and install it on your server:
 * Either from the Admin. Center:
@@ -146,10 +146,10 @@ Download this .zip Marketplace Package and install it on your server:
 
 #### Manual Installation
 You can manually install the plug-in:
-* From the `releases` tab of this repository, download the `ManualInstallation-5.9.5.zip` file. Extract the `.zip`. It contains 2 files: `nuxeo-imagemetadata-utils-plugin-5.9.5.jar` and `im4java-1.4.0.jar`
+* From the `releases` tab of this repository, download the `ManualInstallation-5.9.6-SNAPSHOT.zip` file. Extract the `.zip`. It contains 2 files: `nuxeo-imagemetadata-utils-plugin-5.9.6-SNAPSHOT.jar` and `im4java-1.4.0.jar`
 * Stop `nuxeo` server
 * Install:
-  * `nuxeo-imagemetadata-utils-plugin-5.9.5.jar` in `{server-path}/nxserver/bundles`
+  * `nuxeo-imagemetadata-utils-plugin-5.9.6-SNAPSHOT.jar` in `{server-path}/nxserver/bundles`
   * And `im4java-1.4.0.jar` in `{server-path}/nxserver/lib`
 * Start `nuxeo` server
 
@@ -167,7 +167,7 @@ mvn clean install
 ```
 
 * The plug-in is in `nuxeo-imagemetadata-utils/nuxeo-imagemetadata-utils-plugin/target/`, its name is `nuxeo-imagemetadata-utils-plugin-{version}.jar`.
-* The Marketplace Package is in `nuxeo-imagemetadata-utils/nuxeo-imagemetadata-utils-mp/target`, its name is `nuxeo-imagemetadata-utils-mp-5.9.5.zip`.
+* The Marketplace Package is in `nuxeo-imagemetadata-utils/nuxeo-imagemetadata-utils-mp/target`, its name is `nuxeo-imagemetadata-utils-mp-{version}.zip`.
 
 If you want to import the source code in Eclipse, then after the first build, `cd nuxeo-imagemetadata-utils-plugin` and `mvn eclipse:eclipse`. Then, in Eclipse, choose "File" > "Import...", select "Existing Projects into Workspace" navigate to the `nuxeo-imagemetadata-utils-plugins` folder and select this folder.
 
