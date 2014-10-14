@@ -128,6 +128,8 @@ If you used the default parameters, the data is stored in the `image_metadata` s
 #### Using the Marketplace Package Available in the `releases` Section of this GitHub Repository
 The name is `nuxeo-imagemetadata-utils-mp-5.9.6-SNAPSHOT.zip`.
 
+__NOTE__: Even if the version nupmber is 5.9.6, this plug-in works (and has been tested) with no problem using nuxeo 5.9.5.
+
 Download this .zip Marketplace Package and install it on your server:
 * Either from the Admin. Center:
   * As administrator (Administrator/Administrator by default), in the Admin Center, click on the `Update Center` left tab.
