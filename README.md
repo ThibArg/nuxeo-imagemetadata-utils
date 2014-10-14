@@ -169,10 +169,7 @@ mvn clean install
 * The plug-in is in `nuxeo-imagemetadata-utils/nuxeo-imagemetadata-utils-plugin/target/`, its name is `nuxeo-imagemetadata-utils-plugin-{version}.jar`.
 * The Marketplace Package is in `nuxeo-imagemetadata-utils/nuxeo-imagemetadata-utils-mp/target`, its name is `nuxeo-imagemetadata-utils-mp-5.9.5.zip`.
 
-If you want to import the source code in Eclipse, you can use `mvn eclipse:eclipse` (after having `mvn install`). Then, in Eclipse, choose "File" > "Import...", select "Existing Projects into Workspace" navigate to the `nuxeo-imagemetadata-utils-plugins` folder and select this folder.
-
-**IMPORTANT**-**WARNING**<br/>
-As of today (2014-10-13), the MarketPlace package generated does not work, intallation on the server will fail. Use the `nuxeo-imagemetadata-utils-mp-5.9.5.zip` in the `releases` tab.
+If you want to import the source code in Eclipse, then after the first build, `cd nuxeo-imagemetadata-utils-plugin` and `mvn eclipse:eclipse`. Then, in Eclipse, choose "File" > "Import...", select "Existing Projects into Workspace" navigate to the `nuxeo-imagemetadata-utils-plugins` folder and select this folder.
 
 
 ## Third Party Tools Used
