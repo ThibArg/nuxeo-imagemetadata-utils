@@ -21,6 +21,9 @@
 
     <copy todir="${marketplace}">
       <fileset dir="src/main/resources" />
+      <filterset>
+        <filter token="VERSION" value="${maven.project.version}" />
+      </filterset>
     </copy>
 
     <artifact:nuxeo-expand includeTestScope="false"
