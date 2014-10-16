@@ -51,7 +51,7 @@ import com.google.inject.Inject;
 @RunWith(FeaturesRunner.class)
 @Features({ PlatformFeature.class, CoreFeature.class,
         EmbeddedAutomationServerFeature.class })
-@Deploy({ /*"org.nuxeo.ecm.platform.picture.core",*/ "nuxeo-imagemetadata-utils" })
+@Deploy({ "org.nuxeo.ecm.platform.picture.core", "nuxeo-imagemetadata-utils" })
 public class ImageMetadataReaderTest {
 
     private static final String IMAGE_GIF = "images/a.gif";
@@ -106,13 +106,11 @@ public class ImageMetadataReaderTest {
         parentOfTestDocs = coreSession.createDocument(parentOfTestDocs);
         parentOfTestDocs = coreSession.saveDocument(parentOfTestDocs);
 
-/*
         docPNG = createPictureDocument(filePNG);
         docGIF = createPictureDocument(fileGIF);
         docTIF = createPictureDocument(fileTIF);
         docJPEG = createPictureDocument(fileJPEG);
         coreSession.save();
-*/
     }
 
     @After
@@ -122,7 +120,7 @@ public class ImageMetadataReaderTest {
     }
 
     protected DocumentModel createPictureDocument(File inFile) {
-	
+
         DocumentModel pictDoc = coreSession.createDocumentModel(
                 parentOfTestDocs.getPathAsString(), inFile.getName(), "Picture");
         pictDoc.setPropertyValue("dc:title", inFile.getName());
@@ -208,7 +206,7 @@ public class ImageMetadataReaderTest {
     @Test
     public void testSavePictureMetadataInDocument() throws Exception {
         OperationContext ctx = new OperationContext(coreSession);
-/*
+
         assertNotNull(ctx);
 
         // ========================================
@@ -264,6 +262,6 @@ public class ImageMetadataReaderTest {
         service.run(ctx, chain);
 
         assertEquals(changeToken, docPNG.getChangeToken());
-*/
+
     }
 }
