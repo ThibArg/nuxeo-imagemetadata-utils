@@ -17,6 +17,7 @@
 
 package org.nuxeo.imagemetadata;
 
+import java.io.IOException;
 import java.util.HashMap;
 
 import org.im4java.core.InfoException;
@@ -52,23 +53,23 @@ public class SavePictureMeadataInDocument {
     @Context
     protected CoreSession session;
 
-    @Param(name = "xpath", required = false, values = {"file:content"})
+    @Param(name = "xpath", required = false, values = { "file:content" })
     protected String xpath = "file:content";
 
-    //The map has the xpath as key and the metadata property as value:
-    //  dc:description=Colorspace
-    //  dc:format =Format
-    //  dc:nature=Units
-    //      . . .
+    // The map has the xpath as key and the metadata property as value:
+    // dc:description=Colorspace
+    // dc:format =Format
+    // dc:nature=Units
+    // . . .
     @Param(name = "properties", required = false)
     protected Properties properties;
 
-    @Param(name = "save", required = false, values = {"true"})
+    @Param(name = "save", required = false, values = { "true" })
     protected boolean save = true;
 
     @OperationMethod(collector = DocumentModelCollector.class)
     public DocumentModel run(DocumentModel inDoc) throws ClientException,
-            ClientException, InfoException {
+            ClientException, InfoException, IOException {
         // We do nothing if we don't have the correct kind of document.
         // We could return an error, but we are more generic here,
         // avoiding an hassle to the caller.
@@ -100,27 +101,27 @@ public class SavePictureMeadataInDocument {
         if (hasProperties) {
             String xpathForAll = "";
 
-            //The names of the metadata properties are stored as values in the map
+            // The names of the metadata properties are stored as values in the
+            // map
             String[] keysStr = new String[properties.size()];
             int idx = 0;
-            for(String inXPath : properties.keySet()) {
+            for (String inXPath : properties.keySet()) {
                 keysStr[idx] = properties.get(inXPath);
-                if(keysStr[idx].toLowerCase().equals("all")) {
+                if (keysStr[idx].toLowerCase().equals("all")) {
                     xpathForAll = inXPath;
                 }
 
                 idx += 1;
             }
-            result = imdr.getMetadata( keysStr );
-            for(String inXPath : properties.keySet()) {
-                String value = result.get( properties.get(inXPath) );
+            result = imdr.getMetadata(keysStr);
+            for (String inXPath : properties.keySet()) {
+                String value = result.get(properties.get(inXPath));
                 inDoc.setPropertyValue(inXPath, value);
             }
 
-            if(!xpathForAll.isEmpty()) {
+            if (!xpathForAll.isEmpty()) {
                 inDoc.setPropertyValue(xpathForAll, imdr.getAllMetadata());
             }
-
 
         } else {
 
