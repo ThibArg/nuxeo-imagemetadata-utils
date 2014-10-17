@@ -9,9 +9,9 @@
   <!-- your hime page (optionnal) -->
   <home-page>http://nuxeo.com</home-page>
   <vendor>Nuxeo</vendor>
-  <installer restart="false" />
-  <uninstaller restart="false" />
-  <hotreload-support>true</hotreload-support>
+  <installer restart="true" />
+  <uninstaller restart="true" />
+  <hotreload-support>false</hotreload-support>
   <require-terms-and-conditions-acceptance>false
   </require-terms-and-conditions-acceptance>
   <nuxeo-validation>none</nuxeo-validation>

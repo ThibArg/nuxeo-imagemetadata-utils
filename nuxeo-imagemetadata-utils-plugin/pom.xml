@@ -5,11 +5,11 @@
   <parent>
     <groupId>org.nuxeo.imagemetadata</groupId>
     <artifactId>nuxeo-imagemetadata-parent</artifactId>
-    <version>5.9.6-SNAPSHOT</version>
+    <version>1.0.1-SNAPSHOT</version>
   </parent>
   <groupId>org.nuxeo.imagemetadata</groupId>
   <artifactId>nuxeo-imagemetadata-utils-plugin</artifactId>
-  <version>5.9.6-SNAPSHOT</version>
+  <version>1.0.1-SNAPSHOT</version>
   <name>nuxeo-imagemetadata-utils</name>
   <description />
   <dependencies>

@@ -6,10 +6,11 @@
   <parent>
     <groupId>org.nuxeo.imagemetadata</groupId>
     <artifactId>nuxeo-imagemetadata-parent</artifactId>
-    <version>5.9.6-SNAPSHOT</version>
+    <version>1.0.1-SNAPSHOT</version>
   </parent>
 
   <artifactId>nuxeo-imagemetadata-utils-mp</artifactId>
+  <version>1.0.1-SNAPSHOT</version>
   <packaging>zip</packaging>
   <name>Marketplace package - ImageMetadata Utils</name>
 
