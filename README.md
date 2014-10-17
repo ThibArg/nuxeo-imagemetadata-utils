@@ -1,5 +1,6 @@
 nuxeo-imagemetadata-utils
 =========================
+Currrent version: 1.0.1 - 2014-10-17
 
 ## About - Requirements
 `nuxeo-imagemetadata-utils` is a plug-in for the `nuxeo platform`. It allows to extract metadata stored in pictures and store these information in the document, for easy search, display and reporting. It uses the `ìm4java` tool for this purpose, which, itself, encapsulates calls to `ImageMagick` and, possibly, `ExifTool` (ExifTool is not used in current version.)
@@ -16,6 +17,7 @@ nuxeo-imagemetadata-utils
   * [As Marketplace Package](#using-the-marketplace-package-available-in-the-releases-section-of-this-github-repository)
   * [Manual Installation](#manual-installation)
 * [Building the Plugin](#building-the-plugin)
+* [Versions](#versions)
 * [Third Party Tools Used](#third-party-tools-used)
 * [License](#license)
 * [About Nuxeo](#about-nuxeo)
@@ -126,7 +128,7 @@ If you used the default parameters, the data is stored in the `image_metadata` s
 ## Installation
 
 #### Using the Marketplace Package Available in the `releases` Section of this GitHub Repository
-The name is `nuxeo-imagemetadata-utils-mp-5.9.6-SNAPSHOT.zip`.
+The name is `nuxeo-imagemetadata-utils-mp-{version}-SNAPSHOT.zip`. You should use the latest version (see [here](#versions)).
 
 _NOTE_: Even if the version number is 5.9.6, this plug-in works (and has been tested) with no problem using nuxeo 5.9.5.
 
@@ -148,10 +150,10 @@ Download this .zip Marketplace Package and install it on your server:
 
 #### Manual Installation
 You can manually install the plug-in:
-* From the `releases` tab of this repository, download the `ManualInstallation` file. Extract the `.zip`. It contains 2 files: `nuxeo-imagemetadata-utils-plugin-5.9.6-SNAPSHOT.jar` and `im4java-1.4.0.jar`
+* From the `releases` tab of this repository, download the `ManualInstallation` file. Extract the `.zip`. It contains 2 files: `nuxeo-imagemetadata-utils-plugin-{version}-SNAPSHOT.jar` and `im4java-1.4.0.jar`
 * Stop `nuxeo` server
 * Install:
-  * `nuxeo-imagemetadata-utils-plugin-5.9.6-SNAPSHOT.jar` in `{server-path}/nxserver/bundles`
+  * `nuxeo-imagemetadata-utils-plugin-{version}-SNAPSHOT.jar` in `{server-path}/nxserver/bundles`
   * And `im4java-1.4.0.jar` in `{server-path}/nxserver/lib`
 * Start `nuxeo` server
 
@@ -172,6 +174,16 @@ mvn clean install
 * The Marketplace Package is in `nuxeo-imagemetadata-utils/nuxeo-imagemetadata-utils-mp/target`, its name is `nuxeo-imagemetadata-utils-mp-{version}.zip`.
 
 If you want to import the source code in Eclipse, then after the first build, `cd nuxeo-imagemetadata-utils-plugin` and `mvn eclipse:eclipse`. Then, in Eclipse, choose "File" > "Import...", select "Existing Projects into Workspace" navigate to the `nuxeo-imagemetadata-utils-plugins` folder and select this folder.
+
+## Versions
+
+* **First release** was tagged "5.9.6-SNAPSHOT"
+  * Which was a mistake because, by using nuxeo's version, it did not allow incrementing the plug-in's own version easily
+  * So, this 5.9.6-SNAPSHOT must be read as "version 1.0.0-SNAPSHOT"
+
+* **Version 1.0.1** (2010-10-17)
+  * Allows to handle a new document not yet saved, so the `Save Picture Metadata in Document` operation can be called from the `Àbout to Create` Event Handler
+  * Change version numbering
 
 
 ## Third Party Tools Used
