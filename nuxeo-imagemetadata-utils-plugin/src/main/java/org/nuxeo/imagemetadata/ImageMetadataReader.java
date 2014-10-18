@@ -20,9 +20,12 @@ import java.io.File;
 import java.io.IOException;
 import java.util.Enumeration;
 import java.util.HashMap;
+
 import org.im4java.core.Info;
 import org.im4java.core.InfoException;
 import org.nuxeo.ecm.core.api.Blob;
+import org.nuxeo.ecm.core.api.impl.blob.FileBlob;
+import org.nuxeo.ecm.core.api.impl.blob.StreamingBlob;
 import org.nuxeo.ecm.core.storage.StorageBlob;
 import org.nuxeo.imagemetadata.ImageMetadataConstants.*;
 import org.nuxeo.runtime.api.Framework;
@@ -30,25 +33,31 @@ import org.nuxeo.runtime.services.streaming.FileSource;
 
 public class ImageMetadataReader {
 
-    // private static final Log log =
-    // LogFactory.getLog(ImageMetadataReader.class);
-
-    protected String filePath;
+    protected String filePath = null;
 
     public ImageMetadataReader(Blob inBlob) throws IOException {
 
-        // We try to directly get the full path of the binary, if any.
-        // This blob is not a storage blob (not stored with a document)
-        // Maybe it only exists in memory, in a stream,
-        // ***Should find an API to extract the path, if any****
-        // In the meantime, let's create a temp file. It's duplicating, but,
-        // well. No choices
-        // at the time this is written
-
+        // We try to directly get the full path of the binary, if any,
+        // to avoid creating a temporary file (assuming the i/o cost
+        // would be > cost of the type casting)
+        boolean needTempFile = false;
+        String theClass = inBlob.getClass().getSimpleName();
         try {
-            StorageBlob sb = (StorageBlob) inBlob;
-            filePath = ((FileSource) sb.getBinary().getStreamSource()).getFile().getAbsolutePath();
+            if (theClass.equals("StorageBlob")) {
+                StorageBlob sb = (StorageBlob) inBlob;
+                filePath = ((FileSource) sb.getBinary().getStreamSource()).getFile().getAbsolutePath();
+            } else if (theClass.equals("FileBlob")) {
+                FileBlob fb = (FileBlob) inBlob;
+                filePath = fb.getFile().getAbsolutePath();
+            } else if (theClass.equals("StreamingBlob")) {
+                StreamingBlob sb = (StreamingBlob) inBlob;
+                filePath = ((FileSource) sb.getStreamSource()).getFile().getAbsolutePath();
+            }
         } catch (Exception e) {
+            needTempFile = true;
+        }
+
+        if (needTempFile) {
             File tempFile = File.createTempFile("IMDR-", "");
             inBlob.transferTo(tempFile);
             filePath = tempFile.getAbsolutePath();
