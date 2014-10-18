@@ -12,7 +12,7 @@
  * Lesser General Public License for more details.
  *
  * Contributors:
- *     thibaud
+ *     Thibaud Arguillere
  */
 package org.nuxeo.imagemetadata;
 
@@ -86,49 +86,46 @@ public class ImageMetadataReader {
     }
 
     /*
-     * If inTheseKeys is null or its lenght is 0, then we return all values
-     * defined in METADATA_KEYS (not all the values returned. Just the one in
-     * METADATA_KEYS).
+     * If inTheseKeys is null or its length is 0, we return all properties
      *
      * When a value is returned as null (the key does not exist), it is
      * realigned to the empty string "".
      */
     public HashMap<String, String> getMetadata(String[] inTheseKeys)
             throws InfoException {
-        Info imageInfo = new Info(filePath);
 
         HashMap<String, String> result = new HashMap<String, String>();
+        Info imageInfo = new Info(filePath);
 
-        if (inTheseKeys == null) {
-            for (METADATA_KEYS oneProp : METADATA_KEYS.values()) {
-                String value = imageInfo.getProperty(oneProp.toString());
-                if (value == null) {
-                    value = "";
-                }
-                result.put(oneProp.toString(), value);
+        if (inTheseKeys == null || inTheseKeys.length == 0) {
+
+            Enumeration<String> props = imageInfo.getPropertyNames();
+            while (props.hasMoreElements()) {
+                String propertyName = props.nextElement();
+                result.put(propertyName, imageInfo.getProperty(propertyName));
             }
+
         } else {
             for (String oneProp : inTheseKeys) {
-                String value = imageInfo.getProperty(oneProp.toString());
+                String value = imageInfo.getProperty(oneProp);
                 if (value == null) {
                     value = "";
                 }
                 result.put(oneProp, value);
             }
-        }
 
-        // Handle special case(s)
-        // - Re-align resolution to 72x72 for GIF
-        String keyResolution = METADATA_KEYS.RESOLUTION.toString();
-        if (result.containsKey(keyResolution)
-                && result.get(keyResolution).isEmpty()) {
-            String format = imageInfo.getProperty(METADATA_KEYS.FORMAT.toString());
-            format = format.toLowerCase();
-            if (format.indexOf("gif") == 0) {
-                result.put(keyResolution, "72x72");
+            // Handle special case(s)
+            // - Re-align resolution to 72x72 for GIF
+            String keyResolution = KEYS.RESOLUTION;
+            if (result.containsKey(keyResolution)
+                    && result.get(keyResolution).isEmpty()) {
+                String format = imageInfo.getProperty(KEYS.FORMAT);
+                format = format.toLowerCase();
+                if (format.indexOf("gif") == 0) {
+                    result.put(keyResolution, "72x72");
+                }
             }
         }
-
         return result;
     }
 }

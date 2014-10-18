@@ -12,55 +12,42 @@
  * Lesser General Public License for more details.
  *
  * Contributors:
- *     thibaud
+ *     Thibaud Arguillere
  */
 package org.nuxeo.imagemetadata;
 
 public class ImageMetadataConstants {
 
     /*
-     * The value of each item here must match the parameter of getProperty()
-     * method of the im4java Info class expects. Which actually, is anything
-     * contained in it. When a property does not exist, the returned value is
-     * null ("Resolution" for a gif for example)
+     * Some common keys.
+     *
+     * WARNING: The value of each item here must match (case sensitive) the
+     * parameter of the im4java Info#getProperty method. When a property does
+     * not exist, the returned value is null ("Resolution" for a gif for
+     * example)
      */
-    public static enum METADATA_KEYS {
-        WIDTH("Width"), HEIGHT("Height"), RESOLUTION("Resolution"), COLORSPACE(
-                "Colorspace"), UNITS("Units"), FORMAT("Format");
+    public class KEYS {
+        public static final String WIDTH = "Width";
 
-        private String stringValue = "";
+        public static final String HEIGHT = "Height";
 
-        METADATA_KEYS(String inValue) {
-            stringValue = inValue;
-        }
+        public static final String COLORSPACE = "Colorspace";
 
-        @Override
-        public String toString() {
-            return stringValue;
-        }
+        public static final String RESOLUTION = "Resolution";
 
-        public boolean equals(String inStr) {
-            return inStr == null ? false : inStr.equals(stringValue);
-        }
+        public static final String UNITS = "Units";
+
+        public static final String FORMAT = "Format";
     }
 
-    public static enum RESOLUTION_UNITS {
-        PIXELS_PER_CENTIMETER("PixelsPerCentimeter"), PIXELS_PER_INCH(
-                "PixelsPerInch"), UNDEFINED("Undefined");
+    public static final String[] DEFAULT_KEYS = { KEYS.WIDTH, KEYS.HEIGHT,
+            KEYS.COLORSPACE, KEYS.RESOLUTION, KEYS.UNITS };
 
-        private String stringValue = "";
+    public class RESOLUTION_UNITS {
+        public static final String PIXELS_PER_CENTIMETER = "PixelsPerCentimeter";
 
-        RESOLUTION_UNITS(String inValue) {
-            stringValue = inValue;
-        }
+        public static final String PIXELS_PER_INCH = "PixelsPerInch";
 
-        public boolean equals(String inStr) {
-            return inStr == null ? false : inStr.equals(stringValue);
-        }
-
-        @Override
-        public String toString() {
-            return stringValue;
-        }
+        public static final String UNDEFINED = "Undefined";
     }
 }

@@ -41,6 +41,9 @@ import org.nuxeo.imagemetadata.ImageMetadataConstants.*;
  * schema, which is a schema defined by nuxeo. You could store the data in
  * another schema (maybe a custom schema with only these info for example), we
  * use this one because it is convenient and already here.
+ *
+ * When no properties are requested, the operations extracts width, height,
+ * colorspace and x/y resolution.
  */
 @Operation(id = SavePictureMeadataInDocument.ID, category = Constants.CAT_DOCUMENT, label = "Save Picture Metadata in Document", description = "Extract the metadata from the picture strored in the <code>xpath</code> field. <code>properties</code> (optional) contains a list of <code>xpath=Metadata Key</code> where Metadata Key is the exact name (case sensitive) of a property to retrieve. For example: <code>dc:format=Format</code>If <code>properties</code> is not used, the operation extracts <code>width</code>, <code>height</code>, <code>resolution</code> and <code>colorspace</code> from the picture file, and save the values in the <code>image_metadata</code> schema (the DPI is realigned if needed.)There is a special property: If you pass <code>schemaprefix:field=all</code>, then all the properties are returned (the field must be a String field)")
 public class SavePictureMeadataInDocument {
@@ -125,25 +128,21 @@ public class SavePictureMeadataInDocument {
 
         } else {
 
-            String[] keysStr = { METADATA_KEYS.WIDTH.toString(),
-                    METADATA_KEYS.HEIGHT.toString(),
-                    METADATA_KEYS.COLORSPACE.toString(),
-                    METADATA_KEYS.RESOLUTION.toString(),
-                    METADATA_KEYS.UNITS.toString() };
+            String[] keysStr = { KEYS.WIDTH, KEYS.HEIGHT, KEYS.COLORSPACE,
+                    KEYS.RESOLUTION, KEYS.UNITS };
             result = imdr.getMetadata(keysStr);
 
             // Store the values in the schema
             inDoc.setPropertyValue("imd:pixel_xdimension",
-                    result.get(METADATA_KEYS.WIDTH.toString()));
+                    result.get(KEYS.WIDTH));
             inDoc.setPropertyValue("imd:pixel_ydimension",
-                    result.get(METADATA_KEYS.HEIGHT.toString()));
+                    result.get(KEYS.HEIGHT));
             inDoc.setPropertyValue("imd:color_space",
-                    result.get(METADATA_KEYS.COLORSPACE.toString()));
+                    result.get(KEYS.COLORSPACE));
 
             // Resolution needs extra work
             XYResolutionDPI dpi = new XYResolutionDPI(
-                    result.get(METADATA_KEYS.RESOLUTION.toString()),
-                    result.get(METADATA_KEYS.UNITS.toString()));
+                    result.get(KEYS.RESOLUTION), result.get(KEYS.UNITS));
             inDoc.setPropertyValue("imd:xresolution", dpi.getX());
             inDoc.setPropertyValue("imd:yresolution", dpi.getY());
         }

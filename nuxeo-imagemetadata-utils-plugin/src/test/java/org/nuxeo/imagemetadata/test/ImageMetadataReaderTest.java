@@ -1,5 +1,5 @@
 /*
- * (C) Copyright ${year} Nuxeo SA (http://nuxeo.com/) and contributors.
+ * (C) Copyright 2014 Nuxeo SA (http://nuxeo.com/) and contributors.
  *
  * All rights reserved. This program and the accompanying materials
  * are made available under the terms of the GNU Lesser General Public License
@@ -12,7 +12,7 @@
  * Lesser General Public License for more details.
  *
  * Contributors:
- *     thibaud
+ *     Thibaud Arguillere
  */
 
 package org.nuxeo.imagemetadata.test;
@@ -37,10 +37,9 @@ import org.nuxeo.ecm.core.api.DocumentModel;
 import org.nuxeo.ecm.core.api.impl.blob.FileBlob;
 import org.nuxeo.ecm.core.test.CoreFeature;
 import org.nuxeo.ecm.platform.test.PlatformFeature;
-import org.nuxeo.imagemetadata.ImageMetadataConstants.RESOLUTION_UNITS;
+import org.nuxeo.imagemetadata.ImageMetadataConstants.*;
 import org.nuxeo.imagemetadata.ImageMetadataReader;
 import org.nuxeo.imagemetadata.SavePictureMeadataInDocument;
-import org.nuxeo.imagemetadata.ImageMetadataConstants.METADATA_KEYS;
 import org.nuxeo.imagemetadata.XYResolutionDPI;
 import org.nuxeo.runtime.test.runner.Deploy;
 import org.nuxeo.runtime.test.runner.Features;
@@ -63,16 +62,6 @@ public class ImageMetadataReaderTest {
     private static final String IMAGE_TIF = "images/a.tif";
 
     private static final String NUXEO_LOGO = "images/Nuxeo.png";
-
-    private static final String KEY_WIDTH = METADATA_KEYS.WIDTH.toString();
-
-    private static final String KEY_HEIGHT = METADATA_KEYS.HEIGHT.toString();
-
-    private static final String KEY_COLORSPACE = METADATA_KEYS.COLORSPACE.toString();
-
-    private static final String KEY_RESOLUTION = METADATA_KEYS.RESOLUTION.toString();
-
-    private static final String KEY_UNITS = METADATA_KEYS.UNITS.toString();
 
     protected File filePNG;
 
@@ -145,20 +134,22 @@ public class ImageMetadataReaderTest {
         ImageMetadataReader imdr = new ImageMetadataReader(
                 inWhichOne.getAbsolutePath());
 
-        String[] keysStr = { KEY_WIDTH, KEY_HEIGHT, KEY_COLORSPACE,
-                KEY_RESOLUTION, KEY_UNITS };
+        String[] keysStr = { KEYS.WIDTH, KEYS.HEIGHT, KEYS.COLORSPACE,
+                KEYS.RESOLUTION, KEYS.UNITS };
         HashMap<String, String> result = imdr.getMetadata(keysStr);
         assertNotNull(theAssertMessage, result);
 
-        assertEquals(theAssertMessage, inWidth, result.get(KEY_WIDTH));
-        assertEquals(theAssertMessage, inHeight, result.get(KEY_HEIGHT));
-        assertEquals(theAssertMessage, inColorspace, result.get(KEY_COLORSPACE));
-        assertEquals(theAssertMessage, inResolution, result.get(KEY_RESOLUTION));
-        assertEquals(theAssertMessage, inUnits, result.get(KEY_UNITS));
+        assertEquals(theAssertMessage, inWidth, result.get(KEYS.WIDTH));
+        assertEquals(theAssertMessage, inHeight, result.get(KEYS.HEIGHT));
+        assertEquals(theAssertMessage, inColorspace,
+                result.get(KEYS.COLORSPACE));
+        assertEquals(theAssertMessage, inResolution,
+                result.get(KEYS.RESOLUTION));
+        assertEquals(theAssertMessage, inUnits, result.get(KEYS.UNITS));
 
         // Resolution needs extra work
-        XYResolutionDPI dpi = new XYResolutionDPI(result.get(KEY_RESOLUTION),
-                result.get(KEY_UNITS));
+        XYResolutionDPI dpi = new XYResolutionDPI(result.get(KEYS.RESOLUTION),
+                result.get(KEYS.UNITS));
         assertEquals(theAssertMessage, xDPI, dpi.getX());
         assertEquals(theAssertMessage, yDPI, dpi.getY());
     }
@@ -178,33 +169,45 @@ public class ImageMetadataReaderTest {
     public void testGetAllMetadata() throws Exception {
         ImageMetadataReader imdr = new ImageMetadataReader(
                 filePNG.getAbsolutePath());
+
+        // ==================================================
+        // Test with metadata returned as a String
+        // ==================================================
         String all = imdr.getAllMetadata();
         assertTrue(all != null);
         assertTrue(!all.isEmpty());
 
         // Just for an example:
-        assertTrue(all.indexOf("Format=PNG") > -1);
+        assertTrue(all.indexOf("Format=PNG (Portable Network Graphics)") > -1);
+        assertTrue(all.indexOf("Channel depth:green=8-bit") > -1);
+
+        // ==================================================
+        // Test with the result as a hashmap
+        // ==================================================
+        HashMap<String, String> allInHashMap = imdr.getMetadata(null);
+        assertTrue(allInHashMap.containsKey("Format"));
+        assertEquals("PNG (Portable Network Graphics)", allInHashMap.get("Format"));
+        assertTrue(allInHashMap.containsKey("Channel depth:green"));
+        assertEquals("8-bit", allInHashMap.get("Channel depth:green"));
     }
 
     @Test
     public void testXYResolutionDPI() throws Exception {
         XYResolutionDPI xyDPI = new XYResolutionDPI("180x180",
-                RESOLUTION_UNITS.PIXELS_PER_INCH.toString());
+                RESOLUTION_UNITS.PIXELS_PER_INCH);
         assertEquals(180, xyDPI.getX());
         assertEquals(180, xyDPI.getY());
 
         xyDPI = new XYResolutionDPI("37.89x37.89",
-                RESOLUTION_UNITS.PIXELS_PER_CENTIMETER.toString());
+                RESOLUTION_UNITS.PIXELS_PER_CENTIMETER);
         assertEquals(96, xyDPI.getX());
         assertEquals(96, xyDPI.getY());
 
-        xyDPI = new XYResolutionDPI("72x72",
-                RESOLUTION_UNITS.UNDEFINED.toString());
+        xyDPI = new XYResolutionDPI("72x72", RESOLUTION_UNITS.UNDEFINED);
         assertEquals(72, xyDPI.getX());
         assertEquals(72, xyDPI.getY());
 
-        xyDPI = new XYResolutionDPI("",
-                RESOLUTION_UNITS.PIXELS_PER_INCH.toString());
+        xyDPI = new XYResolutionDPI("", RESOLUTION_UNITS.PIXELS_PER_INCH);
         assertEquals(0, xyDPI.getX());
         assertEquals(0, xyDPI.getY());
     }
