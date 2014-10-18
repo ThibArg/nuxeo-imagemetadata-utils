@@ -7,12 +7,15 @@ Current version: 1.1.0 (adding features)
 ## About - Requirements
 `nuxeo-imagemetadata-utils` is a plug-in for the `nuxeo platform`. It allows to extract metadata stored in pictures and store these information in the document, for easy search, display and reporting. It uses the `ìm4java` tool for this purpose, which, itself, encapsulates calls to `ImageMagick` and, possibly, `ExifTool` (ExifTool is not used in current version.)
 
-**Requirements**: In current version, `nuxeo-imagemetadata-utils` only uses the `ImageMagick` part of `ìm4java`: `ImageMagick` must be installed on your server. This is most likely the case, since `nuxeo` already requires `ImageMagick` (creation of thumbnails, creation of previews, ...)
+**Requirements**:
+* Before version 1.1.0, `nuxeo-imagemetadata-utils` only uses the `ImageMagick` part of `ìm4java`: `ImageMagick` must be installed on your server. This is most likely the case, since `nuxeo` already requires `ImageMagick` (creation of thumbnails, creation of previews, ...)
+* Since version 1.1.0, it also uses `exiftool` in the new command which extracts the XMP data. If you plan to use this command, then make sure `exiftool` is installed on your server.
 
 ## Table of Content
 
 * [Usage](#usage)
-  * [Parameters](#parameters)
+  * [The `Save Picture Metadata in Document` Operation](#the-save-picture-metadata-in-document-operation)
+  * [The `Extract XMP` Operation](#the-extract-xmp-operation)
   * [Importing the Operations in your Studio Project](#importing-the-operations-in-your-studio-project)
   * [Example of Use with Studio](#example-of-use-with-studio)
 * [Installation](#installation)
@@ -25,7 +28,7 @@ Current version: 1.1.0 (adding features)
 * [About Nuxeo](#about-nuxeo)
 
 ## Usage
-### The `Document > Save Picture Metadata in Document` operation
+### The `Save Picture Metadata in Document` Operation
 #### Parameters
 The `Save Picture Metadata in Document` Automation Operation is installed in the `Document` topic. This operation expects 3 optional parameters: `xpath`, `properties` and `save`.
 
@@ -56,7 +59,7 @@ In this example, the plugin will store in `dc:format` the value of the `Format` 
      * The Y resolution, as Dot Per Inch, in `imd:yresolution`
        * NOTE: The resolution is converted in Dots Per Inch if needed (for example, a PNG, storing the information as PIxelsPerCentimeter;)
 
-### The `Files > Extract XMP` operation
+### The `Extract XMP` operation
 This operation is installed in the "Files" topic. This operation:
 
 * Accepts a `blob` as input
