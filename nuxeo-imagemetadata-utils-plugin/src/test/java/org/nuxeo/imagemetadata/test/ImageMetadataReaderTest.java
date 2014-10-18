@@ -20,7 +20,11 @@ package org.nuxeo.imagemetadata.test;
 import static org.junit.Assert.*;
 
 import java.io.File;
+import java.io.StringReader;
 import java.util.HashMap;
+
+import javax.xml.parsers.DocumentBuilder;
+import javax.xml.parsers.DocumentBuilderFactory;
 
 import org.junit.After;
 import org.junit.Before;
@@ -38,12 +42,15 @@ import org.nuxeo.ecm.core.api.impl.blob.FileBlob;
 import org.nuxeo.ecm.core.test.CoreFeature;
 import org.nuxeo.ecm.platform.test.PlatformFeature;
 import org.nuxeo.imagemetadata.ImageMetadataConstants.*;
+import org.nuxeo.imagemetadata.ExtractXMPFromBlobOp;
 import org.nuxeo.imagemetadata.ImageMetadataReader;
 import org.nuxeo.imagemetadata.SavePictureMeadataInDocument;
 import org.nuxeo.imagemetadata.XYResolutionDPI;
 import org.nuxeo.runtime.test.runner.Deploy;
 import org.nuxeo.runtime.test.runner.Features;
 import org.nuxeo.runtime.test.runner.FeaturesRunner;
+import org.w3c.dom.Document;
+import org.xml.sax.InputSource;
 
 import com.google.inject.Inject;
 
@@ -62,6 +69,8 @@ public class ImageMetadataReaderTest {
     private static final String IMAGE_TIF = "images/a.tif";
 
     private static final String NUXEO_LOGO = "images/Nuxeo.png";
+
+    private static final String WITH_XMP = "images/with-xmp.jpg";
 
     protected File filePNG;
 
@@ -186,7 +195,8 @@ public class ImageMetadataReaderTest {
         // ==================================================
         HashMap<String, String> allInHashMap = imdr.getMetadata(null);
         assertTrue(allInHashMap.containsKey("Format"));
-        assertEquals("PNG (Portable Network Graphics)", allInHashMap.get("Format"));
+        assertEquals("PNG (Portable Network Graphics)",
+                allInHashMap.get("Format"));
         assertTrue(allInHashMap.containsKey("Channel depth:green"));
         assertEquals("8-bit", allInHashMap.get("Channel depth:green"));
     }
@@ -299,5 +309,53 @@ public class ImageMetadataReaderTest {
         assertEquals(changeToken, aPictDoc.getChangeToken());
         assertEquals((long) 201,
                 aPictDoc.getPropertyValue("imd:pixel_xdimension"));
+    }
+
+    @Test
+    public void testXMP() throws Exception {
+
+        ImageMetadataReader imdr;
+        String xmp;
+
+        // ==============================
+        // Test on png file with no xmp
+        // ==============================
+        imdr = new ImageMetadataReader(filePNG.getAbsolutePath());
+        xmp = imdr.getXMP();
+        assertTrue(xmp.isEmpty());
+
+        // ==============================
+        // Test on file with xmp
+        // ==============================
+        File withXmpFile = FileUtils.getResourceFileFromContext(WITH_XMP);
+        imdr = new ImageMetadataReader(withXmpFile.getAbsolutePath());
+        xmp = imdr.getXMP();
+        assertFalse(xmp.isEmpty());
+
+        // Check it is a valid, wel formed XML
+        DocumentBuilderFactory dbFactory = DocumentBuilderFactory.newInstance();
+        DocumentBuilder dBuilder = dbFactory.newDocumentBuilder();
+        InputSource is = new InputSource(new StringReader(xmp));
+
+        Document doc = dBuilder.parse(is);
+        assertEquals("x:xmpmeta", doc.getDocumentElement().getNodeName());
+
+        // ==============================
+        // Test the operation
+        // ==============================
+        OperationChain chain;
+        OperationContext ctx = new OperationContext(coreSession);
+        assertNotNull(ctx);
+
+        // Using the file with xmp
+        FileBlob fb = new FileBlob(withXmpFile);
+        ctx.setInput(fb);
+        chain = new OperationChain("testChain");
+        chain.add(ExtractXMPFromBlobOp.ID).set("varName", "xmp");
+        service.run(ctx, chain);
+
+        xmp = (String) ctx.get("xmp");
+        assertFalse(xmp.isEmpty());
+
     }
 }

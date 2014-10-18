@@ -1,6 +1,8 @@
 nuxeo-imagemetadata-utils
 =========================
-Currrent version: 1.0.1 - 2014-10-17
+Last release: 1.0.1 - 2014-10-18
+
+Current version: 1.1.0 (adding features)
 
 ## About - Requirements
 `nuxeo-imagemetadata-utils` is a plug-in for the `nuxeo platform`. It allows to extract metadata stored in pictures and store these information in the document, for easy search, display and reporting. It uses the `ìm4java` tool for this purpose, which, itself, encapsulates calls to `ImageMagick` and, possibly, `ExifTool` (ExifTool is not used in current version.)
@@ -11,7 +13,7 @@ Currrent version: 1.0.1 - 2014-10-17
 
 * [Usage](#usage)
   * [Parameters](#parameters)
-  * [Importing the Operation in your Studio Project](#importing-the-operation-in-your-studio-project)
+  * [Importing the Operations in your Studio Project](#importing-the-operations-in-your-studio-project)
   * [Example of Use with Studio](#example-of-use-with-studio)
 * [Installation](#installation)
   * [As Marketplace Package](#using-the-marketplace-package-available-in-the-releases-section-of-this-github-repository)
@@ -23,8 +25,9 @@ Currrent version: 1.0.1 - 2014-10-17
 * [About Nuxeo](#about-nuxeo)
 
 ## Usage
+### The `Document > Save Picture Metadata in Document` operation
 #### Parameters
-The plug-in provides the `Save Picture Metadata in Document`, Automation Operation installed in the `Document` topic. This operation expects 3 optional parameters: `xpath`, `properties` and `save`.
+The `Save Picture Metadata in Document` Automation Operation is installed in the `Document` topic. This operation expects 3 optional parameters: `xpath`, `properties` and `save`.
 
 * `xpath` is the path to the binary, in the document, holding then picture. It is set by default to `file:content`, which means the default main binary
 * When the `save` box is checked then the document will be automatically saved. Not checking this box is interesting when the next operations, for example, will also update some fields, so we want some time to avoid saving the document in the database, triggering events, etc.
@@ -53,14 +56,31 @@ In this example, the plugin will store in `dc:format` the value of the `Format` 
      * The Y resolution, as Dot Per Inch, in `imd:yresolution`
        * NOTE: The resolution is converted in Dots Per Inch if needed (for example, a PNG, storing the information as PIxelsPerCentimeter;)
 
+### The `Files > Extract XMP` operation
+This operation is installed in the "Files" topic. This operation:
 
-#### Importing the Operation in your Studio Project
-Because this operation is not part of the default platform, it is not available by default in Studio, you must add its JSON definition in the `Automation Operations` registry of your Studio project:
+* Accepts a `blob` as input
+* Expects one requited parameter, `varName`, which will be filled with the raw XML of the XMP metadata stored in the blob. If the blob has no XMP metadata, the variable is set to the empty string, "".
 
-* Copy the JSON definition of the operation (see below)
+An example of Automation Chain using this operation would be:
+
+```
+Fetch > Context Document(s)
+Files > Get Document File
+Files > Extract XMP
+  varName: theXMP
+. . .
+```
+The `theXMP` context variable be used. For example, an `MVEL` expression could check it is is empty (no XMP in the file) or not: `@{theXMP.isEMpty()}`
+
+
+### Importing the Operations in your Studio Project
+Because these operations are not part of the default platform, they are available by default in Studio, you must add their JSON definition in the `Automation Operations` registry of your Studio project:
+
+* Copy the JSON definition of the operations (see below)
 * In Studio, go to "Settings & Versioning" > "Registries" > "Automation Operations"
 * Paste the JSON definition:
-  * If this operation is the only one you are importing, then you can just start the registry with `{"operations": [`, then copy the JSON definition, and then add `]}`, so you would have something like:<br>
+  * If these operations are the only one you are importing, then you can just start the registry with `{"operations": [`, copy the JSON definition, and then add `]}`, so you would have something like:<br>
   ```
   {
     "operations": [
@@ -74,19 +94,19 @@ Because this operation is not part of the default platform, it is not available 
   ```
   * If you already have other custom operations, just add this to the list( don't forget the `,` to separate the operations)
 
-**Getting the JSON Definition of the Operation**
-* Install the plug-in (see below, "Installation")
-* Once the plug-in is installed and the server running:
+**Getting the JSON Definition of the Operations**
+* Install the plug-in on your server (see below, "Installation")
+* Once the plug-in is installed and the server:
   * Login as an administrator
-  * Then, go to {your-server:port}/nuxeo/site/automation/doc
+  * Go to {your-server:port}/nuxeo/site/automation/doc
   * Find the operation (just do a search on the page for `Save Picture Metadata in Document` for example)
   * Click the "JSON Definition" link
   * Copy the JSON definition
-  * WARNING: If the description of the operation contains lines, remove them manually of saving the definition will fail.
+  * WARNING: If the description of the operation contains lines, remove them manually or saving the definition in Studio will fail.
 
 
 
-#### Example of Use with Studio
+### Example of Use with Studio
 
 **Update Metadata when a Picture is Created/Modified**<br/>
 We want to update the metadata every time the binary file is modified. Which means, basically, when the document is created or when the user replaces the existing file with another.
@@ -159,7 +179,7 @@ You can manually install the plug-in:
 
 
 ## Building the Plugin
-You can also download the source code and compile the plug-in. Which is what you will do if you want to change, adapt, etc.
+You can also download the source code and compile the plug-in. You would do it it you want to use, for example, featires that are not yet released or if you want to change, adapt, etc.
 Assuming [`maven`](http://maven.apache.org) (min. 3.2.1) is installed on your computer:
 ```
 # Clone the GitHub repository
@@ -181,9 +201,11 @@ If you want to import the source code in Eclipse, then after the first build, `c
   * Which was a mistake because, by using nuxeo's version, it did not allow incrementing the plug-in's own version easily
   * So, this 5.9.6-SNAPSHOT must be read as "version 1.0.0-SNAPSHOT"
 
-* **Version 1.0.1** (2010-10-17)
+* **Version 1.0.1** (Released 2010-10-18)
   * Allows to handle a new document not yet saved, so the `Save Picture Metadata in Document` operation can be called from the `Àbout to Create` Event Handler
   * Change version numbering
+
+* **Current Dev. Version is 1.1.0**
 
 
 ## Third Party Tools Used
