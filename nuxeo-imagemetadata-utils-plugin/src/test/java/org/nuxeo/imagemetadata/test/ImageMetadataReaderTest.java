@@ -55,35 +55,26 @@ import com.google.inject.Inject;
 public class ImageMetadataReaderTest {
 
     private static final String IMAGE_GIF = "images/a.gif";
-
     private static final String IMAGE_JPEG = "images/a.jpg";
-
     private static final String IMAGE_PNG = "images/a.png";
-
     private static final String IMAGE_TIF = "images/a.tif";
-
     private static final String NUXEO_LOGO = "images/Nuxeo.png";
 
-    private static final METADATA_KEYS[] KEYS = { METADATA_KEYS.WIDTH,
-            METADATA_KEYS.HEIGHT, METADATA_KEYS.COLORSPACE,
-            METADATA_KEYS.RESOLUTION, METADATA_KEYS.UNITS };
+    private static final String KEY_WIDTH = METADATA_KEYS.WIDTH.toString();
+    private static final String KEY_HEIGHT = METADATA_KEYS.HEIGHT.toString();
+    private static final String KEY_COLORSPACE = METADATA_KEYS.COLORSPACE.toString();
+    private static final String KEY_RESOLUTION = METADATA_KEYS.RESOLUTION.toString();
+    private static final String KEY_UNITS = METADATA_KEYS.UNITS.toString();
 
     protected File filePNG;
-
     protected File fileGIF;
-
     protected File fileTIF;
-
     protected File fileJPEG;
 
     protected DocumentModel parentOfTestDocs;
-
     protected DocumentModel docPNG;
-
     protected DocumentModel docGIF;
-
     protected DocumentModel docTIF;
-
     protected DocumentModel docJPEG;
 
     @Inject
@@ -135,27 +126,32 @@ public class ImageMetadataReaderTest {
             String inHeight, String inColorspace, String inResolution,
             String inUnits, int xDPI, int yDPI) throws Exception {
 
-        String fileName = inWhichOne.getName();
+        String theAssertMessage = "getMetadata() for " + inWhichOne.getName();
         ImageMetadataReader imdr = new ImageMetadataReader(
                 inWhichOne.getAbsolutePath());
 
-        HashMap<METADATA_KEYS, String> result = imdr.getMetadata(KEYS);
-        assertNotNull(fileName, result);
+        String[] keysStr = { KEY_WIDTH,
+                KEY_HEIGHT,
+                KEY_COLORSPACE,
+                KEY_RESOLUTION,
+                KEY_UNITS };
+        HashMap<String, String> result = imdr.getMetadata(keysStr);
+        assertNotNull(theAssertMessage, result);
 
-        assertEquals(fileName, inWidth, result.get(METADATA_KEYS.WIDTH));
-        assertEquals(fileName, inHeight, result.get(METADATA_KEYS.HEIGHT));
-        assertEquals(fileName, inColorspace,
-                result.get(METADATA_KEYS.COLORSPACE));
-        assertEquals(fileName, inResolution,
-                result.get(METADATA_KEYS.RESOLUTION));
-        assertEquals(fileName, inUnits, result.get(METADATA_KEYS.UNITS));
+        assertEquals(theAssertMessage, inWidth, result.get(KEY_WIDTH));
+        assertEquals(theAssertMessage, inHeight, result.get(KEY_HEIGHT));
+        assertEquals(theAssertMessage, inColorspace,
+                result.get(KEY_COLORSPACE));
+        assertEquals(theAssertMessage, inResolution,
+                result.get(KEY_RESOLUTION));
+        assertEquals(theAssertMessage, inUnits, result.get(KEY_UNITS));
 
         // Resolution needs extra work
         XYResolutionDPI dpi = new XYResolutionDPI(
-                result.get(METADATA_KEYS.RESOLUTION),
-                result.get(METADATA_KEYS.UNITS));
-        assertEquals(fileName, xDPI, dpi.getX());
-        assertEquals(fileName, yDPI, dpi.getY());
+                result.get(KEY_RESOLUTION),
+                result.get(KEY_UNITS));
+        assertEquals(theAssertMessage, xDPI, dpi.getX());
+        assertEquals(theAssertMessage, yDPI, dpi.getY());
     }
 
     @Test
@@ -269,8 +265,6 @@ public class ImageMetadataReaderTest {
 
     @Test
     public void testWhenDocIsNotSaved() throws Exception {
-        // Not saved => the blob is not a StorageBlob
-
         File nuxeoFile = FileUtils.getResourceFileFromContext(NUXEO_LOGO);
         DocumentModel aPictDoc = coreSession.createDocumentModel(
                 parentOfTestDocs.getPathAsString(), filePNG.getName(),
@@ -279,18 +273,19 @@ public class ImageMetadataReaderTest {
         aPictDoc.setPropertyValue("file:content", new FileBlob(nuxeoFile));
         // We don't coreSession.createDocument(aPictDoc);
         // because we don't want the blob to be stored in the BinaryStore
+        // (so it's not a StorageBlob)
 
         OperationContext ctx = new OperationContext(coreSession);
         assertNotNull(ctx);
         String changeToken = aPictDoc.getChangeToken();
         ctx.setInput(aPictDoc);
         OperationChain chain = new OperationChain("testChain");
+        // Here too, we don't save
         chain.add(SavePictureMeadataInDocument.ID).set("save", false);
         service.run(ctx, chain);
 
         assertEquals(changeToken, aPictDoc.getChangeToken());
         assertEquals((long) 201,
                 aPictDoc.getPropertyValue("imd:pixel_xdimension"));
-
     }
 }
