@@ -55,26 +55,41 @@ import com.google.inject.Inject;
 public class ImageMetadataReaderTest {
 
     private static final String IMAGE_GIF = "images/a.gif";
+
     private static final String IMAGE_JPEG = "images/a.jpg";
+
     private static final String IMAGE_PNG = "images/a.png";
+
     private static final String IMAGE_TIF = "images/a.tif";
+
     private static final String NUXEO_LOGO = "images/Nuxeo.png";
 
     private static final String KEY_WIDTH = METADATA_KEYS.WIDTH.toString();
+
     private static final String KEY_HEIGHT = METADATA_KEYS.HEIGHT.toString();
+
     private static final String KEY_COLORSPACE = METADATA_KEYS.COLORSPACE.toString();
+
     private static final String KEY_RESOLUTION = METADATA_KEYS.RESOLUTION.toString();
+
     private static final String KEY_UNITS = METADATA_KEYS.UNITS.toString();
 
     protected File filePNG;
+
     protected File fileGIF;
+
     protected File fileTIF;
+
     protected File fileJPEG;
 
     protected DocumentModel parentOfTestDocs;
+
     protected DocumentModel docPNG;
+
     protected DocumentModel docGIF;
+
     protected DocumentModel docTIF;
+
     protected DocumentModel docJPEG;
 
     @Inject
@@ -130,25 +145,19 @@ public class ImageMetadataReaderTest {
         ImageMetadataReader imdr = new ImageMetadataReader(
                 inWhichOne.getAbsolutePath());
 
-        String[] keysStr = { KEY_WIDTH,
-                KEY_HEIGHT,
-                KEY_COLORSPACE,
-                KEY_RESOLUTION,
-                KEY_UNITS };
+        String[] keysStr = { KEY_WIDTH, KEY_HEIGHT, KEY_COLORSPACE,
+                KEY_RESOLUTION, KEY_UNITS };
         HashMap<String, String> result = imdr.getMetadata(keysStr);
         assertNotNull(theAssertMessage, result);
 
         assertEquals(theAssertMessage, inWidth, result.get(KEY_WIDTH));
         assertEquals(theAssertMessage, inHeight, result.get(KEY_HEIGHT));
-        assertEquals(theAssertMessage, inColorspace,
-                result.get(KEY_COLORSPACE));
-        assertEquals(theAssertMessage, inResolution,
-                result.get(KEY_RESOLUTION));
+        assertEquals(theAssertMessage, inColorspace, result.get(KEY_COLORSPACE));
+        assertEquals(theAssertMessage, inResolution, result.get(KEY_RESOLUTION));
         assertEquals(theAssertMessage, inUnits, result.get(KEY_UNITS));
 
         // Resolution needs extra work
-        XYResolutionDPI dpi = new XYResolutionDPI(
-                result.get(KEY_RESOLUTION),
+        XYResolutionDPI dpi = new XYResolutionDPI(result.get(KEY_RESOLUTION),
                 result.get(KEY_UNITS));
         assertEquals(theAssertMessage, xDPI, dpi.getX());
         assertEquals(theAssertMessage, yDPI, dpi.getY());
