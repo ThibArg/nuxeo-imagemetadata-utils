@@ -16,11 +16,8 @@
  */
 package org.nuxeo.imagemetadata;
 
-import java.io.BufferedReader;
 import java.io.File;
 import java.io.IOException;
-import java.io.InputStream;
-import java.io.InputStreamReader;
 import java.util.Enumeration;
 import java.util.HashMap;
 
@@ -29,11 +26,12 @@ import org.im4java.core.ExiftoolCmd;
 import org.im4java.core.IM4JavaException;
 import org.im4java.core.Info;
 import org.im4java.core.InfoException;
-import org.im4java.process.OutputConsumer;
 import org.nuxeo.ecm.core.api.Blob;
+import org.nuxeo.ecm.core.api.ClientException;
 import org.nuxeo.ecm.core.api.impl.blob.FileBlob;
 import org.nuxeo.ecm.core.api.impl.blob.StreamingBlob;
 import org.nuxeo.ecm.core.storage.StorageBlob;
+import org.nuxeo.im4java.StringOutputConsumer;
 import org.nuxeo.imagemetadata.ImageMetadataConstants.*;
 import org.nuxeo.runtime.api.Framework;
 import org.nuxeo.runtime.services.streaming.FileSource;
@@ -41,6 +39,10 @@ import org.nuxeo.runtime.services.streaming.FileSource;
 public class ImageMetadataReader {
 
     protected String filePath = null;
+
+    protected static int exiftoolAvailability = -1;
+
+    protected static String whyExiftoolNotAvailable = "";
 
     public ImageMetadataReader(Blob inBlob) throws IOException {
 
@@ -75,6 +77,22 @@ public class ImageMetadataReader {
 
     public ImageMetadataReader(String inFullPath) {
         filePath = inFullPath;
+    }
+
+    public static boolean isExiftoolAvailable() {
+
+        if (exiftoolAvailability == -1) {
+
+            try {
+                Runtime.getRuntime().exec("exiftool -ver");
+                exiftoolAvailability = 1;
+            } catch (Exception e) {
+                exiftoolAvailability = 0;
+                whyExiftoolNotAvailable = e.getMessage();
+            }
+        }
+
+        return exiftoolAvailability == 1;
     }
 
     public String getAllMetadata() throws InfoException {
@@ -136,66 +154,31 @@ public class ImageMetadataReader {
         return result;
     }
 
-    /*
-     * Utility class use by exiftool wrappers, to get the result of a command as
-     * String. im4java already provides an ArrayListOutputConsumer
-     */
-    protected class StringOutputConsumer implements OutputConsumer {
-        protected String output = "";
+    public String getXMP() throws ClientException {
 
-        private String charset = null;
-
-        public StringOutputConsumer() {
-
+        if (!ImageMetadataReader.isExiftoolAvailable()) {
+            throw new ClientException("ExifTool is not available: "
+                    + whyExiftoolNotAvailable);
         }
 
-        public StringOutputConsumer(String inCharset) {
-            charset = inCharset;
+        try {
+            ETOperation op = new ETOperation();
+            op.getTags("xmp", "b");
+            op.addImage();
+
+            // setup command and execute it (capture output)
+            StringOutputConsumer output = new StringOutputConsumer();
+            ExiftoolCmd et = new ExiftoolCmd();
+            et.setOutputConsumer(output);
+            et.run(op, filePath);
+            return output.getOutput();
+
+        } catch (IOException e) {
+            throw new ClientException(e);
+        } catch (InterruptedException e) {
+            throw new ClientException(e);
+        } catch (IM4JavaException e) {
+            throw new ClientException(e);
         }
-
-        public String getOutput() {
-            return output;
-        }
-
-        public void clear() {
-            output = "";
-        }
-
-        @Override
-        public void consumeOutput(InputStream inStream) throws IOException {
-            InputStreamReader isr = null;
-
-            if (charset == null) {
-                isr = new InputStreamReader(inStream);
-            } else {
-                isr = new InputStreamReader(inStream, charset);
-            }
-            BufferedReader reader = new BufferedReader(isr);
-            String line;
-            do {
-                line = reader.readLine();
-                if (line != null) {
-                    output += line + "\n";
-                }
-            } while (line != null);
-
-            reader.close();
-        }
-    }
-
-    public String getXMP() throws IOException, InterruptedException,
-            IM4JavaException {
-
-        ETOperation op = new ETOperation();
-        op.getTags("xmp", "b");
-        op.addImage();
-
-        // setup command and execute it (capture output)
-        StringOutputConsumer output = new StringOutputConsumer();
-        ExiftoolCmd et = new ExiftoolCmd();
-        et.setOutputConsumer(output);
-        et.run(op, filePath);
-
-        return output.getOutput();
     }
 }

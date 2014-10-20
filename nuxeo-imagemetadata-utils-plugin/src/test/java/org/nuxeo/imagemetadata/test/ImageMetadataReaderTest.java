@@ -57,7 +57,8 @@ import com.google.inject.Inject;
 @RunWith(FeaturesRunner.class)
 @Features({ PlatformFeature.class, CoreFeature.class,
         EmbeddedAutomationServerFeature.class })
-@Deploy({ "org.nuxeo.ecm.platform.picture.core", "nuxeo-imagemetadata-utils" })
+@Deploy({ "org.nuxeo.ecm.platform.picture.core", "nuxeo-imagemetadata-utils",
+        "org.nuxeo.ecm.platform.commandline.executor" })
 public class ImageMetadataReaderTest {
 
     private static final String IMAGE_GIF = "images/a.gif";
@@ -332,11 +333,10 @@ public class ImageMetadataReaderTest {
         xmp = imdr.getXMP();
         assertFalse(xmp.isEmpty());
 
-        // Check it is a valid, wel formed XML
+        // Check it is a valid, well formed XML
         DocumentBuilderFactory dbFactory = DocumentBuilderFactory.newInstance();
         DocumentBuilder dBuilder = dbFactory.newDocumentBuilder();
         InputSource is = new InputSource(new StringReader(xmp));
-
         Document doc = dBuilder.parse(is);
         assertEquals("x:xmpmeta", doc.getDocumentElement().getNodeName());
 
@@ -354,8 +354,17 @@ public class ImageMetadataReaderTest {
         chain.add(ExtractXMPFromBlobOp.ID).set("varName", "xmp");
         service.run(ctx, chain);
 
+        // Check our "xmp" Context Variable is filled
         xmp = (String) ctx.get("xmp");
         assertFalse(xmp.isEmpty());
+
+        // Check it is a valid, well formed XML
+        // (we re-used the variables declared previously)
+        dbFactory = DocumentBuilderFactory.newInstance();
+        dBuilder = dbFactory.newDocumentBuilder();
+        is = new InputSource(new StringReader(xmp));
+        doc = dBuilder.parse(is);
+        assertEquals("x:xmpmeta", doc.getDocumentElement().getNodeName());
 
     }
 }

@@ -71,8 +71,7 @@ public class SavePictureMeadataInDocument {
     protected boolean save = true;
 
     @OperationMethod(collector = DocumentModelCollector.class)
-    public DocumentModel run(DocumentModel inDoc) throws ClientException,
-            ClientException, InfoException, IOException {
+    public DocumentModel run(DocumentModel inDoc) throws ClientException, IOException, InfoException {
         // We do nothing if we don't have the correct kind of document.
         // We could return an error, but we are more generic here,
         // avoiding an hassle to the caller.
