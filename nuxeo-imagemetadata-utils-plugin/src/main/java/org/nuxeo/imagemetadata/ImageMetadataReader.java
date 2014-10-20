@@ -46,27 +46,24 @@ public class ImageMetadataReader {
 
     public ImageMetadataReader(Blob inBlob) throws IOException {
 
-        // We try to directly get the full path of the binary, if any,
-        // to avoid creating a temporary file (assuming the i/o cost
-        // would be > cost of the type casting)
-        boolean needTempFile = false;
-        String theClass = inBlob.getClass().getSimpleName();
+        // We try to directly get the full path of the binary, if possible
+        filePath = "";
         try {
-            if (theClass.equals("StorageBlob")) {
+            if (inBlob instanceof StorageBlob) {
                 StorageBlob sb = (StorageBlob) inBlob;
                 filePath = ((FileSource) sb.getBinary().getStreamSource()).getFile().getAbsolutePath();
-            } else if (theClass.equals("FileBlob")) {
+            } else if (inBlob instanceof FileBlob) {
                 FileBlob fb = (FileBlob) inBlob;
                 filePath = fb.getFile().getAbsolutePath();
-            } else if (theClass.equals("StreamingBlob")) {
+            } else if (inBlob instanceof StreamingBlob) {
                 StreamingBlob sb = (StreamingBlob) inBlob;
                 filePath = ((FileSource) sb.getStreamSource()).getFile().getAbsolutePath();
             }
         } catch (Exception e) {
-            needTempFile = true;
+            filePath = "";
         }
 
-        if (needTempFile) {
+        if (filePath.isEmpty()) {
             File tempFile = File.createTempFile("IMDR-", "");
             inBlob.transferTo(tempFile);
             filePath = tempFile.getAbsolutePath();
