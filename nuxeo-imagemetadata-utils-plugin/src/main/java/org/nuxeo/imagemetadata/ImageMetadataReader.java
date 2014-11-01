@@ -28,13 +28,10 @@ import org.im4java.core.Info;
 import org.im4java.core.InfoException;
 import org.nuxeo.ecm.core.api.Blob;
 import org.nuxeo.ecm.core.api.ClientException;
-import org.nuxeo.ecm.core.api.impl.blob.FileBlob;
-import org.nuxeo.ecm.core.api.impl.blob.StreamingBlob;
-import org.nuxeo.ecm.core.storage.StorageBlob;
+import org.nuxeo.ecm.platform.picture.api.BlobHelper;
 import org.nuxeo.im4java.StringOutputConsumer;
 import org.nuxeo.imagemetadata.ImageMetadataConstants.*;
 import org.nuxeo.runtime.api.Framework;
-import org.nuxeo.runtime.services.streaming.FileSource;
 
 public class ImageMetadataReader {
 
@@ -49,16 +46,10 @@ public class ImageMetadataReader {
         // We try to directly get the full path of the binary, if possible
         filePath = "";
         try {
-            if (inBlob instanceof StorageBlob) {
-                StorageBlob sb = (StorageBlob) inBlob;
-                filePath = ((FileSource) sb.getBinary().getStreamSource()).getFile().getAbsolutePath();
-            } else if (inBlob instanceof FileBlob) {
-                FileBlob fb = (FileBlob) inBlob;
-                filePath = fb.getFile().getAbsolutePath();
-            } else if (inBlob instanceof StreamingBlob) {
-                StreamingBlob sb = (StreamingBlob) inBlob;
-                filePath = ((FileSource) sb.getStreamSource()).getFile().getAbsolutePath();
-            }
+
+            File f = BlobHelper.getFileFromBlob(inBlob);
+            filePath = f.getAbsolutePath();
+
         } catch (Exception e) {
             filePath = "";
         }
