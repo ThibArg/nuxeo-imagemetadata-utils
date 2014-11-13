@@ -18,14 +18,19 @@ package org.nuxeo.imagemetadata;
 
 import java.io.File;
 import java.io.IOException;
+import java.util.ArrayList;
 import java.util.Enumeration;
 import java.util.HashMap;
+import java.util.Properties;
 
+import org.apache.commons.logging.Log;
+import org.apache.commons.logging.LogFactory;
 import org.im4java.core.ETOperation;
 import org.im4java.core.ExiftoolCmd;
 import org.im4java.core.IM4JavaException;
 import org.im4java.core.Info;
 import org.im4java.core.InfoException;
+import org.im4java.process.ArrayListOutputConsumer;
 import org.nuxeo.ecm.core.api.Blob;
 import org.nuxeo.ecm.core.api.ClientException;
 import org.nuxeo.ecm.platform.picture.api.BlobHelper;
@@ -35,11 +40,23 @@ import org.nuxeo.runtime.api.Framework;
 
 public class ImageMetadataReader {
 
+    private static Log log = LogFactory.getLog(ImageMetadataReader.class);
+
     protected String filePath = null;
 
-    protected static int exiftoolAvailability = -1;
+    protected static int exifToolAvailability = -1;
 
-    protected static String whyExiftoolNotAvailable = "";
+    protected static String whyExifToolNotAvailable = "";
+
+    protected static int graphicsMagickAvailability = -1;
+
+    protected static String whyGraphicsMagickNotAvailable = "";
+
+    protected static String SYNC_STRING = "ImageMetadataReader - lock";
+
+    public enum WHICH_TOOL {
+        IMAGEMAGICK, EXIFTOOL, GRAPHICSMAGICK
+    };
 
     public ImageMetadataReader(Blob inBlob) throws IOException {
 
@@ -67,20 +84,47 @@ public class ImageMetadataReader {
         filePath = inFullPath;
     }
 
-    public static boolean isExiftoolAvailable() {
+    protected void checkCommandLines() {
+        if(!isExifToolAvailable(false)) {
+            log.warn("ExifTool is not available, some command may fail");
+        }
 
-        if (exiftoolAvailability == -1) {
+        if(!isGraphicsMagickAvailable(false)) {
+            log.warn("GraphicsMagick is not available, some command may fail");
+        }
+
+    }
+
+    public static boolean isExifToolAvailable(boolean inForceRetry) {
+
+        if (exifToolAvailability == -1 || inForceRetry) {
 
             try {
                 Runtime.getRuntime().exec("exiftool -ver");
-                exiftoolAvailability = 1;
+                exifToolAvailability = 1;
             } catch (Exception e) {
-                exiftoolAvailability = 0;
-                whyExiftoolNotAvailable = e.getMessage();
+                exifToolAvailability = 0;
+                whyExifToolNotAvailable = e.getMessage();
             }
         }
 
-        return exiftoolAvailability == 1;
+        return exifToolAvailability == 1;
+    }
+
+    public static boolean isGraphicsMagickAvailable(boolean inForceRetry) {
+
+        if (graphicsMagickAvailability == -1 || inForceRetry) {
+
+            try {
+                Runtime.getRuntime().exec("gm -version");
+                graphicsMagickAvailability = 1;
+            } catch (Exception e) {
+                graphicsMagickAvailability = 0;
+                whyGraphicsMagickNotAvailable = e.getMessage();
+            }
+        }
+
+        return graphicsMagickAvailability == 1;
     }
 
     public String getAllMetadata() throws InfoException {
@@ -99,55 +143,133 @@ public class ImageMetadataReader {
     }
 
     /*
-     * If inTheseKeys is null or its length is 0, we return all properties
+     * We want to protect the global change to im4java. For non blocking use of
+     * GraohicsMagick, use the dedicated classes: GMOperation and
+     * GraphicsMagickCmd
+     */
+    protected synchronized Info getInfoFromGraphicsMagick()
+            throws ClientException {
+
+        Info imageInfo = null;
+        Properties props = System.getProperties();
+        props.setProperty("im4java.useGM", "true");
+
+        try {
+            imageInfo = new Info(filePath);
+        } catch (InfoException e) {
+            throw new ClientException(e);
+        } finally {
+            props.setProperty("im4java.useGM", "false");
+        }
+
+        return imageInfo;
+    }
+
+    /**
+     * Wrapper for getMetadata(String[] inTheseKeys, WHICH_TOOL inToolToUse)
+     * using ImageMagick by default
      *
-     * When a value is returned as null (the key does not exist), it is
-     * realigned to the empty string "".
+     * @param inTheseKeys
+     * @return a hash map with the values. A key not found is in the map with a
+     *         value of ""
+     * @throws ClientException
+     *
+     * @since 6.0
      */
     public HashMap<String, String> getMetadata(String[] inTheseKeys)
-            throws InfoException {
+            throws ClientException {
+        return getMetadata(inTheseKeys, WHICH_TOOL.IMAGEMAGICK);
+    }
+
+    /**
+     * If inTheseKeys is null or its length is 0, we return all properties.
+     * <p>
+     * When used with ImageMagick or GraphicsMagick, the method uses the Info
+     * class of im4java.
+     * <p>
+     * When used with ExifTool it just calls getMetadataWithExifTool() (see this
+     * method). Notice the keys are not the same when used with ImageMagick or
+     * ExifTool.
+     * <p>
+     * When a value is returned as null (the key does not exist), it is
+     * realigned to the empty string "".
+     *
+     * @param inTheseKeys
+     * @param inToolToUse
+     * @return a hash map with the values. A key not found is in the map with a
+     *         value of ""
+     * @throws ClientException
+     *
+     * @since 6.0
+     */
+    public HashMap<String, String> getMetadata(String[] inTheseKeys,
+            WHICH_TOOL inToolToUse) throws ClientException {
 
         HashMap<String, String> result = new HashMap<String, String>();
-        Info imageInfo = new Info(filePath);
 
-        if (inTheseKeys == null || inTheseKeys.length == 0) {
+        try {
+            if (inToolToUse == WHICH_TOOL.EXIFTOOL) {
 
-            Enumeration<String> props = imageInfo.getPropertyNames();
-            while (props.hasMoreElements()) {
-                String propertyName = props.nextElement();
-                result.put(propertyName, imageInfo.getProperty(propertyName));
-            }
+                result = getMetadataWithExifTool(inTheseKeys);
 
-        } else {
-            for (String oneProp : inTheseKeys) {
-                String value = imageInfo.getProperty(oneProp);
-                if (value == null) {
-                    value = "";
+            } else {
+
+                Info imageInfo = null;
+
+                if (inToolToUse == WHICH_TOOL.GRAPHICSMAGICK) {
+                    imageInfo = getInfoFromGraphicsMagick();
+                } else {
+                    imageInfo = new Info(filePath);
                 }
-                result.put(oneProp, value);
-            }
 
-            // Handle special case(s)
-            // - Re-align resolution to 72x72 for GIF
-            String keyResolution = KEYS.RESOLUTION;
-            if (result.containsKey(keyResolution)
-                    && result.get(keyResolution).isEmpty()) {
-                String format = imageInfo.getProperty(KEYS.FORMAT);
-                format = format.toLowerCase();
-                if (format.indexOf("gif") == 0) {
-                    result.put(keyResolution, "72x72");
+                if (inTheseKeys == null || inTheseKeys.length == 0) {
+
+                    Enumeration<String> props = imageInfo.getPropertyNames();
+                    while (props.hasMoreElements()) {
+                        String propertyName = props.nextElement();
+                        result.put(propertyName,
+                                imageInfo.getProperty(propertyName));
+                    }
+
+                } else {
+                    for (String oneProp : inTheseKeys) {
+                        String value = imageInfo.getProperty(oneProp);
+                        if (value == null) {
+                            value = "";
+                        }
+                        result.put(oneProp, value);
+                    }
+
+                    // Handle special case(s)
+                    // - Re-align resolution to 72x72 for GIF
+                    String keyResolution = KEYS.RESOLUTION;
+                    if (result.containsKey(keyResolution)
+                            && result.get(keyResolution).isEmpty()) {
+                        String format = imageInfo.getProperty(KEYS.FORMAT);
+                        format = format.toLowerCase();
+                        if (format.indexOf("gif") == 0) {
+                            result.put(keyResolution, "72x72");
+                        }
+                    }
                 }
             }
+        } catch (NullPointerException | InfoException e) {
+            throw new ClientException(e);
+        } finally {
+            Properties props = System.getProperties();
+            props.setProperty("im4java.useGM", "false");
         }
         return result;
     }
 
+    /**
+     *
+     * @return the whole XMP as XML
+     * @throws ClientException
+     *
+     * @since 6.0
+     */
     public String getXMP() throws ClientException {
-
-        if (!ImageMetadataReader.isExiftoolAvailable()) {
-            throw new ClientException("ExifTool is not available: "
-                    + whyExiftoolNotAvailable);
-        }
 
         try {
             ETOperation op = new ETOperation();
@@ -168,5 +290,200 @@ public class ImageMetadataReader {
         } catch (IM4JavaException e) {
             throw new ClientException(e);
         }
+    }
+
+    public class FilterLine {
+
+        protected String line;
+
+        protected String key;
+
+        protected String value;
+
+        public FilterLine() {
+
+        }
+
+        protected void parseLine() {
+            key = null;
+            value = "";
+
+            String[] splitted = line.split(":", 2);
+            if (splitted.length > 0) {
+                key = splitted[0].trim();
+                if (splitted.length > 1) {
+                    value = splitted[1].trim();
+                }
+            }
+        }
+
+        public void setLine(String inLine) {
+            line = inLine;
+            parseLine();
+        }
+
+        public String getKey() {
+            return key;
+        }
+
+        public String getValue() {
+            return value;
+        }
+    }
+
+    /**
+     * The key is case insensitive but must be one expected by ExifTool. And
+     * there are hundreds of them. See ExifTool tags documentation at
+     * http://www.sno.phy.queensu.ca/~phil/exiftool/TagNames/index.html
+     *
+     * If inTheseKeys is null or its size is 0, we return all values (using the
+     * -All tag of ExifTool)
+     *
+     * @param inTheseKeys
+     * @return a hash map with the values. A key not found is in the map with a
+     *         value of ""
+     * @throws ClientException
+     *
+     * @since 6.0
+     */
+    public HashMap<String, String> getMetadataWithExifTool(String[] inTheseKeys)
+            throws ClientException {
+
+        HashMap<String, String> result = new HashMap<String, String>();
+
+        try {
+            boolean hasKeys = inTheseKeys != null && inTheseKeys.length > 0;
+
+            ETOperation op = new ETOperation();
+            if (hasKeys) {
+                for (String oneProp : inTheseKeys) {
+                    op.getTags(oneProp);
+                }
+            } else {
+                op.getTags("All");
+            }
+
+            op.addImage();
+
+            // We don't want the output as Human Readable. We want "ImageWidth",
+            // "XResolution", and not "Image Width", "X Resolution" for example
+            op.addRawArgs("-s");
+
+            // Run
+            ArrayListOutputConsumer output = new ArrayListOutputConsumer();
+            ExiftoolCmd et = new ExiftoolCmd();
+            et.setOutputConsumer(output);
+            et.run(op, filePath);
+
+            // Get the values
+            FilterLine fl = new FilterLine();
+            ArrayList<String> cmdOutput = output.getOutput();
+            for (String line : cmdOutput) {
+                fl.setLine(line);
+                result.put(fl.getKey(), fl.getValue());
+            }
+
+            // Add the not-found values
+            if (hasKeys) {
+                for (String oneProp : inTheseKeys) {
+                    if (!result.containsKey(oneProp)) {
+                        result.put(oneProp, "");
+                    }
+                }
+            }
+
+        } catch (IOException | InterruptedException | IM4JavaException e) {
+            throw new ClientException(e);
+        } finally {
+
+        }
+
+        return result;
+    }
+
+    protected String test() throws IOException, InterruptedException,
+            IM4JavaException {
+        ETOperation op = new ETOperation();
+        // op.getTags("Filename","ImageWidth","ImageHeight","keywords",
+        // "Brand_Code", "Title", "Creator", "Description", "Rights");
+        // REMEMBER: Tag names are case insensitive with exiftool. So ImageWidth
+        // or imagewidth are OK
+
+        /*
+         * op.getTags("FileName", "ImageWidth", "ImageHeight", "FileType",
+         * "Orientation", "XResolution", "YResolution", "ResolutionUnit");
+         * op.getTags("CreatorTool"); op.getTags("Title", "Subject",
+         * "Caption-Abstract", "Creator", "Description", "Rights");
+         *
+         * // Specific XMP-EJ-GALLo op.getTags("Brand_Code", "Brand_Name",
+         * "Project_Name");
+         */
+        op.getTags("all");
+        op.addImage();
+
+        // We don't wa nt the output as Human Readable. We want "ImageWidht",
+        // "XResolution", and not "Image Width", "X Reslution"
+        op.addRawArgs("-s");
+
+        // setup command and execute it (capture output)
+        ArrayListOutputConsumer output = new ArrayListOutputConsumer();
+        ExiftoolCmd et = new ExiftoolCmd();
+        et.setOutputConsumer(output);
+        et.run(op, filePath);
+
+        String s = "";
+        // dump output
+        ArrayList<String> cmdOutput = output.getOutput();
+        for (String line : cmdOutput) {
+            s += line + "\n";
+        }
+
+        return s;
+    }
+
+    public String getMetadataWithGM() throws IOException, InterruptedException,
+            IM4JavaException {
+
+        String result = "";
+
+        result = test();
+
+        return result;
+
+        /*
+         * GMOperation op = new GMOperation(); op.addRawArgs("-verbose");
+         * op.addImage(); StringOutputConsumer output = new
+         * StringOutputConsumer(); GraphicsMagickCmd cmd = new
+         * GraphicsMagickCmd("identify"); cmd.setOutputConsumer(output);
+         * cmd.run(op, filePath); String s4 = output.getOutput();
+         *
+         * String s3 = ""; if(true) { ETOperation op2 = new ETOperation();
+         * op2.getTags("iptc:all");//op2.getTags("iptc", "all"); op2.addImage();
+         *
+         * // setup command and execute it (capture output) StringOutputConsumer
+         * output2 = new StringOutputConsumer(); ExiftoolCmd et = new
+         * ExiftoolCmd(); et.setOutputConsumer(output2); et.run(op, filePath);
+         * s3 = output2.getOutput(); }
+         *
+         *
+         *
+         * Info imageInfoIM = new Info(filePath); String s1 = "";
+         * Enumeration<String> zeProps = imageInfoIM.getPropertyNames(); while
+         * (zeProps.hasMoreElements()) { String propertyName =
+         * zeProps.nextElement(); s1 += propertyName + "=" +
+         * imageInfoIM.getProperty(propertyName) + "\n"; }
+         *
+         * Properties props = System.getProperties();
+         * props.setProperty("im4java.useGM", "true"); Info imageInfoGM = new
+         * Info(filePath); props.setProperty("im4java.useGM", "false");
+         *
+         *
+         * String s2 = ""; zeProps = imageInfoGM.getPropertyNames(); while
+         * (zeProps.hasMoreElements()) { String propertyName =
+         * zeProps.nextElement(); s2 += propertyName + "=" +
+         * imageInfoGM.getProperty(propertyName) + "\n"; }
+         */
+
+        // return result;
     }
 }

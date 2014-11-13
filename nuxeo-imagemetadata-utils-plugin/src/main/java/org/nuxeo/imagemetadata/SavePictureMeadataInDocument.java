@@ -34,6 +34,7 @@ import org.nuxeo.ecm.core.api.CoreSession;
 import org.nuxeo.ecm.core.api.DocumentModel;
 import org.nuxeo.ecm.core.api.model.PropertyException;
 import org.nuxeo.imagemetadata.ImageMetadataConstants.*;
+import org.nuxeo.imagemetadata.ImageMetadataReader.WHICH_TOOL;
 
 /**
  * Extract the metadata from the picture stored in the <code>xpath</code> field.
@@ -44,12 +45,19 @@ import org.nuxeo.imagemetadata.ImageMetadataConstants.*;
  * <p>
  * <code>dc:format=Format</code>
  * <p>
+ * If you use ExifTool, remember the tabs are not the same as in ImageMagick.
+ * Also, even if ExifTool is not case sensitive for the tags, this operation is,
+ * because it handles key=value
+ * <p>
  * If <code>properties</code> is not used, the operation extracts
  * <code>width</code>, <code>height</code>, <code>resolution</code> and
  * <code>colorspace</code> from the picture file, and save the values in the
  * <code>image_metadata</code> schema (the DPI is realigned if needed.)There is
  * a special property: If you pass <code>schemaprefix:field=all</code>, then all
  * the properties are returned (the field must be a String field)
+ * <p>
+ * <i>IMPORTANT</i>: When <code>properties</code>, is empty it is not possible
+ * to use ExifTool.
  *
  */
 @Operation(id = SavePictureMeadataInDocument.ID, category = Constants.CAT_DOCUMENT, label = "Save Picture Metadata in Document", description = "Extract the metadata from the picture stored in the <code>xpath</code> field. <code>properties</code> (optional) contains a list of <code>xpath=Metadata Key</code> where Metadata Key is the exact name (case sensitive) of a property to retrieve. For example: <code>dc:format=Format</code>If <code>properties</code> is not used, the operation extracts <code>width</code>, <code>height</code>, <code>resolution</code> and <code>colorspace</code> from the picture file, and save the values in the <code>image_metadata</code> schema (the DPI is realigned if needed.)There is a special property: If you pass <code>schemaprefix:field=all</code>, then all the properties are returned (the field must be a String field)")
@@ -74,6 +82,10 @@ public class SavePictureMeadataInDocument {
     @Param(name = "properties", required = false)
     protected Properties properties;
 
+    @Param(name = "tool", required = false, widget = Constants.W_OPTION, values = {
+            "ImageMagick", "GraphicsMagick", "ExifTool" })
+    String tool = "ImageMagick";
+
     @Param(name = "save", required = false, values = { "true" })
     protected boolean save = true;
 
@@ -89,6 +101,21 @@ public class SavePictureMeadataInDocument {
         if (inDoc.isImmutable()
                 || (!hasProperties && !inDoc.hasSchema("image_metadata"))) {
             return inDoc;
+        }
+
+        ImageMetadataReader.WHICH_TOOL toolToUse = null;
+        switch (tool.toLowerCase()) {
+        case "graphicsmagick":
+            toolToUse = WHICH_TOOL.GRAPHICSMAGICK;
+            break;
+
+        case "exiftool":
+            toolToUse = WHICH_TOOL.EXIFTOOL;
+            break;
+
+        default:
+            toolToUse = WHICH_TOOL.IMAGEMAGICK;
+            break;
         }
 
         // Get the blob
@@ -123,7 +150,7 @@ public class SavePictureMeadataInDocument {
 
                 idx += 1;
             }
-            result = imdr.getMetadata(keysStr);
+            result = imdr.getMetadata(keysStr, toolToUse);
             for (String inXPath : properties.keySet()) {
                 String value = result.get(properties.get(inXPath));
                 inDoc.setPropertyValue(inXPath, value);

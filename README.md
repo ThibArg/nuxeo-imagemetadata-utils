@@ -1,8 +1,8 @@
 nuxeo-imagemetadata-utils
 =========================
-Last release: 1.0.1 - 2014-10-18
+Last release: 1.2.0- 2014-11-13
 
-Current version: 1.1.0 (adding features)
+Current version: 1.2.0 (adding features)
 
 ## About - Requirements
 `nuxeo-imagemetadata-utils` is a plug-in for the `nuxeo platform`. It allows to extract metadata stored in pictures and store these information in the document, for easy search, display and reporting. It uses the `ìm4java` tool for this purpose, which, itself, encapsulates calls to `ImageMagick` and, possibly, `ExifTool` (ExifTool is not used in current version.)
@@ -34,6 +34,7 @@ The `Save Picture Metadata in Document` Automation Operation is installed in the
 
 * `xpath` is the path to the binary, in the document, holding then picture. It is set by default to `file:content`, which means the default main binary
 * When the `save` box is checked then the document will be automatically saved. Not checking this box is interesting when the next operations, for example, will also update some fields, so we want some time to avoid saving the document in the database, triggering events, etc.
+* `tool` lets you select which tool must be used: ImageMagick (default), GraphicsMagick or ExifTool.
 * The `properties` parameter is a list a `key=value` elements (separated by a line), where `key` is the XPATH of a field and `value`is the exact name (case sensitive) of a picture metadata field, as returned by the `identify -verbose` command of `ImageMagick` (sub-properties use a colon as separator: `image statistics:Overall:standard deviation` for example). You could use something like:<br/>
 ```
 dc:format=Format
@@ -208,7 +209,7 @@ If you want to import the source code in Eclipse, then after the first build, `c
   * Allows to handle a new document not yet saved, so the `Save Picture Metadata in Document` operation can be called from the `Àbout to Create` Event Handler
   * Change version numbering
 
-* **Current Dev. Version is 1.1.0**
+* **Current Dev. Version is 1.2.0**
 
 
 ## Third Party Tools Used

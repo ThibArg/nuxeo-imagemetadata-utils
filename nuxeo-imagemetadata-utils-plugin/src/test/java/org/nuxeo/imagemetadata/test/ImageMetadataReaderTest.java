@@ -42,6 +42,7 @@ import org.nuxeo.ecm.core.api.impl.blob.FileBlob;
 import org.nuxeo.ecm.core.test.CoreFeature;
 import org.nuxeo.ecm.platform.test.PlatformFeature;
 import org.nuxeo.imagemetadata.ImageMetadataConstants.*;
+import org.nuxeo.imagemetadata.ImageMetadataReader.WHICH_TOOL;
 import org.nuxeo.imagemetadata.ExtractXMPFromBlobOp;
 import org.nuxeo.imagemetadata.ImageMetadataReader;
 import org.nuxeo.imagemetadata.SavePictureMeadataInDocument;
@@ -365,6 +366,53 @@ public class ImageMetadataReaderTest {
         is = new InputSource(new StringReader(xmp));
         doc = dBuilder.parse(is);
         assertEquals("x:xmpmeta", doc.getDocumentElement().getNodeName());
+
+    }
+
+    @Test
+    public void testGetMetadataWithExifTool() throws Exception {
+
+        HashMap<String, String> result;
+        ImageMetadataReader imdr;
+        String [] theKeys = {"ImageSize", "FileName", "ImageHeight", "ImageWidth", "FileType", "JFIFVersion", "ProfileVersion", "ProfileDescription"};
+
+        imdr = new ImageMetadataReader(filePNG.getAbsolutePath());
+        result = imdr.getMetadata(theKeys, WHICH_TOOL.EXIFTOOL);
+        assertNotNull(result);
+        assertEquals("100x100", result.get("ImageSize"));
+        assertEquals(filePNG.getName(), result.get("FileName"));
+        assertEquals("100", result.get("ImageWidth"));
+        assertEquals("100", result.get("ImageHeight"));
+        assertEquals("PNG", result.get("FileType"));
+        // Expected "" values returned because the image does not have these tags
+        assertEquals("", result.get("JFIFVersion"));
+        assertEquals("", result.get("ProfileVersion"));
+        assertEquals("", result.get("ProfileDescription"));
+
+        imdr = new ImageMetadataReader(fileJPEG.getAbsolutePath());
+        result = imdr.getMetadata(theKeys, WHICH_TOOL.EXIFTOOL);
+        assertNotNull(result);
+        assertEquals("1597x232", result.get("ImageSize"));
+        assertEquals(fileJPEG.getName(), result.get("FileName"));
+        assertEquals("1597", result.get("ImageWidth"));
+        assertEquals("232", result.get("ImageHeight"));
+        assertEquals("JPEG", result.get("FileType"));
+        assertEquals("1.01", result.get("JFIFVersion"));
+        // Expected "" values returned because the image does not have these tags
+        assertEquals("", result.get("ProfileVersion"));
+        assertEquals("", result.get("ProfileDescription"));
+
+        imdr = new ImageMetadataReader(fileTIF.getAbsolutePath());
+        result = imdr.getMetadata(theKeys, WHICH_TOOL.EXIFTOOL);
+        assertNotNull(result);
+        assertEquals("438x640", result.get("ImageSize"));
+        assertEquals(fileTIF.getName(), result.get("FileName"));
+        assertEquals("438", result.get("ImageWidth"));
+        assertEquals("640", result.get("ImageHeight"));
+        assertEquals("JPEG", result.get("FileType"));
+        assertEquals("1.01", result.get("JFIFVersion"));
+        assertEquals("2.1.0", result.get("ProfileVersion"));
+        assertEquals("sRGB IEC61966-2.1", result.get("ProfileDescription"));
 
     }
 }
