@@ -233,9 +233,13 @@ public class ImageMetadataReader {
 
                 } else {
                     for (String oneProp : inTheseKeys) {
-                        String value = imageInfo.getProperty(oneProp);
-                        if (value == null) {
-                            value = "";
+                        String value = "";
+                        
+                        if(oneProp != null && !oneProp.isEmpty()) {
+                            value = imageInfo.getProperty(oneProp);
+                            if (value == null) {
+                                value = "";
+                            }
                         }
                         result.put(oneProp, value);
                     }
@@ -356,7 +360,9 @@ public class ImageMetadataReader {
             ETOperation op = new ETOperation();
             if (hasKeys) {
                 for (String oneProp : inTheseKeys) {
-                    op.getTags(oneProp);
+                    if(oneProp != null && !oneProp.isEmpty()) {
+                        op.getTags(oneProp);
+                    }
                 }
             } else {
                 op.getTags("All");
