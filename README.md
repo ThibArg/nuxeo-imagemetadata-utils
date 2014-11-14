@@ -5,11 +5,12 @@ Last release: 1.2.0- 2014-11-13
 Current version: 1.2.0 (adding features)
 
 ## About - Requirements
-`nuxeo-imagemetadata-utils` is a plug-in for the `nuxeo platform`. It allows to extract metadata stored in pictures and store these information in the document, for easy search, display and reporting. It uses the `ìm4java` tool for this purpose, which, itself, encapsulates calls to `ImageMagick` and, possibly, `ExifTool` (ExifTool is not used in current version.)
+`nuxeo-imagemetadata-utils` is a plug-in for the `nuxeo platform`. It allows to extract metadata stored in pictures and store these information in the document, for easy search, display and reporting. It uses the `ìm4java` tool for this purpose, which, itself, encapsulates calls to `ImageMagick` and, possibly, `ExifTool` and `GraphicsMagick`.
 
 **Requirements**:
 * Before version 1.1.0, `nuxeo-imagemetadata-utils` only uses the `ImageMagick` part of `ìm4java`: `ImageMagick` must be installed on your server. This is most likely the case, since `nuxeo` already requires `ImageMagick` (creation of thumbnails, creation of previews, ...)
 * Since version 1.1.0, it also uses `exiftool` in the new command which extracts the XMP data. If you plan to use this command, then make sure `exiftool` is installed on your server.
+* Since version 1.2.0, there is a choice, when extracting metadata, to use either ImageMagick, ExifTool or GraphicsMagick. Make sure the tool you use is installed on your server (ClientException will occur if not the case)
 
 ## Table of Content
 
