@@ -256,8 +256,7 @@ public class ImageMetadataReader {
         } catch (NullPointerException | InfoException e) {
             throw new ClientException(e);
         } finally {
-            Properties props = System.getProperties();
-            props.setProperty("im4java.useGM", "false");
+
         }
         return result;
     }

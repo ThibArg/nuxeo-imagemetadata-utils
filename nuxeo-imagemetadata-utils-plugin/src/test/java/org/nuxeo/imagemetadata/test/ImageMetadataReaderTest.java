@@ -415,4 +415,35 @@ public class ImageMetadataReaderTest {
         assertEquals("sRGB IEC61966-2.1", result.get("ProfileDescription"));
 
     }
+
+    @Test
+    public void testSavePictureMetadataInDocument_ExifTool() throws Exception {
+        OperationContext ctx = new OperationContext(coreSession);
+        assertNotNull(ctx);
+
+        // ========================================
+        // TEST WITH DEFAULT VALUES
+        // ========================================
+        OperationChain chain = new OperationChain("testChain");
+
+        Properties props = new Properties();
+        props.put("dc:description", "ColorMode");
+        props.put("dc:language", "CopyrightNotice");
+        props.put("dc:format", "ImageHeight");
+        props.put("dc:rights", "ImageSize");
+        props.put("dc:source", "FileType");
+        chain.add(SavePictureMeadataInDocument.ID).set("tool",  "ExifTool").set("properties", props);
+
+        ctx.setInput(docTIF);
+        DocumentModel resultDoc = (DocumentModel) service.run(ctx, chain);
+
+        String s1 = (String) resultDoc.getPropertyValue("dc:description");
+        String s2 = (String) resultDoc.getPropertyValue("dc:language");
+        String s3 = (String) resultDoc.getPropertyValue("dc:format");
+        String s4 = (String) resultDoc.getPropertyValue("dc:rights");
+        String s5 = (String) resultDoc.getPropertyValue("dc:source");
+
+        String last = "";
+
+    }
 }
