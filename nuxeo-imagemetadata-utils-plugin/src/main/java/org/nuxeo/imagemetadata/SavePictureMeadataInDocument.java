@@ -32,7 +32,9 @@ import org.nuxeo.ecm.core.api.Blob;
 import org.nuxeo.ecm.core.api.ClientException;
 import org.nuxeo.ecm.core.api.CoreSession;
 import org.nuxeo.ecm.core.api.DocumentModel;
+import org.nuxeo.ecm.core.api.model.Property;
 import org.nuxeo.ecm.core.api.model.PropertyException;
+import org.nuxeo.ecm.core.schema.types.Type;
 import org.nuxeo.imagemetadata.ImageMetadataConstants.*;
 import org.nuxeo.imagemetadata.ImageMetadataReader.WHICH_TOOL;
 
@@ -153,6 +155,10 @@ public class SavePictureMeadataInDocument {
             result = imdr.getMetadata(keysStr, toolToUse);
             for (String inXPath : properties.keySet()) {
                 String value = result.get(properties.get(inXPath));
+                if(util_isIntOrLong(inDoc.getProperty(inXPath))) {
+                    long v = Math.round(Double.valueOf(value));
+                    value = "" + v;
+                }
                 inDoc.setPropertyValue(inXPath, value);
             }
 
@@ -187,6 +193,19 @@ public class SavePictureMeadataInDocument {
         }
 
         return inDoc;
+    }
+
+    protected boolean util_isIntOrLong(Property inProp) {
+
+        Type t = inProp.getType();
+        boolean isIntOrLong = false;
+
+        do {
+            isIntOrLong = t.getName().equals("int") || t.getName().equals("long");
+            t = t.getSuperType();
+        } while(t != null && !isIntOrLong);
+
+        return isIntOrLong;
     }
 
 }
