@@ -224,23 +224,4 @@ public class SavePictureMeadataInDocument {
 
         return theType;
     }
-
-    protected boolean util_checkpropertyKind(Property inProp, String... inKinds) {
-        Type t = inProp.getType();
-        boolean found = false;
-
-        do {
-            String name = t.getName();
-            for(String kind : inKinds) {
-                if(name.equals(kind)) {
-                    found = true;
-                    break;
-                }
-            }
-            t = t.getSuperType();
-        } while(t != null && !found);
-
-        return found;
-    }
-
 }
