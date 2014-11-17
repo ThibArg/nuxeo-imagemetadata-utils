@@ -374,7 +374,9 @@ public class ImageMetadataReaderTest {
 
         HashMap<String, String> result;
         ImageMetadataReader imdr;
-        String [] theKeys = {"ImageSize", "FileName", "ImageHeight", "ImageWidth", "FileType", "JFIFVersion", "ProfileVersion", "ProfileDescription"};
+        String[] theKeys = { "ImageSize", "FileName", "ImageHeight",
+                "ImageWidth", "FileType", "JFIFVersion", "ProfileVersion",
+                "ProfileDescription" };
 
         imdr = new ImageMetadataReader(filePNG.getAbsolutePath());
         result = imdr.getMetadata(theKeys, WHICH_TOOL.EXIFTOOL);
@@ -384,7 +386,8 @@ public class ImageMetadataReaderTest {
         assertEquals("100", result.get("ImageWidth"));
         assertEquals("100", result.get("ImageHeight"));
         assertEquals("PNG", result.get("FileType"));
-        // Expected "" values returned because the image does not have these tags
+        // Expected "" values returned because the image does not have these
+        // tags
         assertEquals("", result.get("JFIFVersion"));
         assertEquals("", result.get("ProfileVersion"));
         assertEquals("", result.get("ProfileDescription"));
@@ -398,7 +401,8 @@ public class ImageMetadataReaderTest {
         assertEquals("232", result.get("ImageHeight"));
         assertEquals("JPEG", result.get("FileType"));
         assertEquals("1.01", result.get("JFIFVersion"));
-        // Expected "" values returned because the image does not have these tags
+        // Expected "" values returned because the image does not have these
+        // tags
         assertEquals("", result.get("ProfileVersion"));
         assertEquals("", result.get("ProfileDescription"));
 
@@ -421,9 +425,6 @@ public class ImageMetadataReaderTest {
         OperationContext ctx = new OperationContext(coreSession);
         assertNotNull(ctx);
 
-        // ========================================
-        // TEST WITH DEFAULT VALUES
-        // ========================================
         OperationChain chain = new OperationChain("testChain");
 
         Properties props = new Properties();
@@ -432,18 +433,46 @@ public class ImageMetadataReaderTest {
         props.put("dc:format", "ImageHeight");
         props.put("dc:rights", "ImageSize");
         props.put("dc:source", "FileType");
-        chain.add(SavePictureMeadataInDocument.ID).set("tool",  "ExifTool").set("properties", props);
+        chain.add(SavePictureMeadataInDocument.ID).set("tool", "ExifTool").set(
+                "properties", props).set("save", false);
 
         ctx.setInput(docTIF);
         DocumentModel resultDoc = (DocumentModel) service.run(ctx, chain);
 
-        String s1 = (String) resultDoc.getPropertyValue("dc:description");
-        String s2 = (String) resultDoc.getPropertyValue("dc:language");
-        String s3 = (String) resultDoc.getPropertyValue("dc:format");
-        String s4 = (String) resultDoc.getPropertyValue("dc:rights");
-        String s5 = (String) resultDoc.getPropertyValue("dc:source");
+        assertEquals("", resultDoc.getPropertyValue("dc:description"));
+        assertEquals("", resultDoc.getPropertyValue("dc:language"));
+        assertEquals("640", resultDoc.getPropertyValue("dc:format"));
+        assertEquals("438x640", resultDoc.getPropertyValue("dc:rights"));
+        assertEquals("JPEG", resultDoc.getPropertyValue("dc:source"));
 
         String last = "";
+
+    }
+
+    @Test
+    public void testSavePictureMetadataInDocument_CheckEmptyNumValue()
+            throws Exception {
+        OperationContext ctx = new OperationContext(coreSession);
+        assertNotNull(ctx);
+
+        OperationChain chain = new OperationChain("testChain");
+
+        Properties props = new Properties();
+        // common:size is an integer, and the png has no value for XResolution
+        // (so, "" in the MetadataReader)
+        // We check it does not trigger the "EmptyString" error
+        props.put("common:size", "XResolution");
+        chain.add(SavePictureMeadataInDocument.ID).set("tool", "ExifTool").set(
+                "properties", props).set("save", false);
+
+        ctx.setInput(docPNG);
+        try {
+            DocumentModel resultDoc = (DocumentModel) service.run(ctx, chain);
+        } catch (Exception e) {
+            assertTrue(
+                    "Handling an empty string for numerical fields should not be a proble",
+                    false);
+        }
 
     }
 }

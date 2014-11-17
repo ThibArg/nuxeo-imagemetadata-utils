@@ -155,8 +155,25 @@ public class SavePictureMeadataInDocument {
             result = imdr.getMetadata(keysStr, toolToUse);
             for (String inXPath : properties.keySet()) {
                 String value = result.get(properties.get(inXPath));
-                if(util_isIntOrLong(inDoc.getProperty(inXPath))) {
+
+                String theType = utils_getBasePropertyType(inDoc.getProperty(inXPath));
+                if(theType.equals("int") || theType.equals("long")) {
+                    if(value.isEmpty()) {
+                        value = "0";
+                    }
                     long v = Math.round(Double.valueOf(value));
+                    value = "" + v;
+                } else if(theType.equals("float")) {
+                    if(value.isEmpty()) {
+                        value = "0.0";
+                    }
+                    float v = Float.valueOf(value);
+                    value = "" + v;
+                } else if(theType.equals("double")) {
+                    if(value.isEmpty()) {
+                        value = "0.0";
+                    }
+                    double v = Double.valueOf(value);
                     value = "" + v;
                 }
                 inDoc.setPropertyValue(inXPath, value);
@@ -195,17 +212,35 @@ public class SavePictureMeadataInDocument {
         return inDoc;
     }
 
-    protected boolean util_isIntOrLong(Property inProp) {
+    protected String utils_getBasePropertyType(Property inProp) {
 
         Type t = inProp.getType();
-        boolean isIntOrLong = false;
+        String theType;
 
         do {
-            isIntOrLong = t.getName().equals("int") || t.getName().equals("long");
+            theType = t.getName();
             t = t.getSuperType();
-        } while(t != null && !isIntOrLong);
+        } while(t != null);
 
-        return isIntOrLong;
+        return theType;
+    }
+
+    protected boolean util_checkpropertyKind(Property inProp, String... inKinds) {
+        Type t = inProp.getType();
+        boolean found = false;
+
+        do {
+            String name = t.getName();
+            for(String kind : inKinds) {
+                if(name.equals(kind)) {
+                    found = true;
+                    break;
+                }
+            }
+            t = t.getSuperType();
+        } while(t != null && !found);
+
+        return found;
     }
 
 }
