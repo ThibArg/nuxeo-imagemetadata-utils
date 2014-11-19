@@ -137,6 +137,7 @@ public class SavePictureMeadataInDocument {
         // store the values in the image_metadata fields
         ImageMetadataReader imdr = new ImageMetadataReader(theBlob);
         HashMap<String, String> result = null;
+        boolean ok = true;
         if (hasProperties) {
             String xpathForAll = "";
 
@@ -152,34 +153,42 @@ public class SavePictureMeadataInDocument {
 
                 idx += 1;
             }
-            result = imdr.getMetadata(keysStr, toolToUse);
-            for (String inXPath : properties.keySet()) {
-                String value = result.get(properties.get(inXPath));
+            try {
+                result = imdr.getMetadata(keysStr, toolToUse);
+            } catch (Exception e) {
+                // Just ignore if the tool can't read the file (a .csv for
+                // example)
+                ok = false;
+            }
+            if (ok) {
+                for (String inXPath : properties.keySet()) {
+                    String value = result.get(properties.get(inXPath));
 
-                String theType = utils_getBasePropertyType(inDoc.getProperty(inXPath));
-                if(theType.equals("int") || theType.equals("long")) {
-                    if(value.isEmpty()) {
-                        value = "0";
+                    String theType = utils_getBasePropertyType(inDoc.getProperty(inXPath));
+                    if (theType.equals("int") || theType.equals("long")) {
+                        if (value.isEmpty()) {
+                            value = "0";
+                        }
+                        long v = Math.round(Double.valueOf(value));
+                        value = "" + v;
+                    } else if (theType.equals("float")) {
+                        if (value.isEmpty()) {
+                            value = "0.0";
+                        }
+                        float v = Float.valueOf(value);
+                        value = "" + v;
+                    } else if (theType.equals("double")) {
+                        if (value.isEmpty()) {
+                            value = "0.0";
+                        }
+                        double v = Double.valueOf(value);
+                        value = "" + v;
                     }
-                    long v = Math.round(Double.valueOf(value));
-                    value = "" + v;
-                } else if(theType.equals("float")) {
-                    if(value.isEmpty()) {
-                        value = "0.0";
-                    }
-                    float v = Float.valueOf(value);
-                    value = "" + v;
-                } else if(theType.equals("double")) {
-                    if(value.isEmpty()) {
-                        value = "0.0";
-                    }
-                    double v = Double.valueOf(value);
-                    value = "" + v;
+                    inDoc.setPropertyValue(inXPath, value);
                 }
-                inDoc.setPropertyValue(inXPath, value);
             }
 
-            if (!xpathForAll.isEmpty()) {
+            if (ok && !xpathForAll.isEmpty()) {
                 inDoc.setPropertyValue(xpathForAll, imdr.getAllMetadata());
             }
 
@@ -187,25 +196,34 @@ public class SavePictureMeadataInDocument {
 
             String[] keysStr = { KEYS.WIDTH, KEYS.HEIGHT, KEYS.COLORSPACE,
                     KEYS.RESOLUTION, KEYS.UNITS };
-            result = imdr.getMetadata(keysStr);
 
-            // Store the values in the schema
-            inDoc.setPropertyValue("imd:pixel_xdimension",
-                    result.get(KEYS.WIDTH));
-            inDoc.setPropertyValue("imd:pixel_ydimension",
-                    result.get(KEYS.HEIGHT));
-            inDoc.setPropertyValue("imd:color_space",
-                    result.get(KEYS.COLORSPACE));
+            try {
+                result = imdr.getMetadata(keysStr);
+            } catch (Exception e) {
+                // Just ignore if the tool can't read the file (a .csv for
+                // example)
+                ok = false;
+            }
 
-            // Resolution needs extra work
-            XYResolutionDPI dpi = new XYResolutionDPI(
-                    result.get(KEYS.RESOLUTION), result.get(KEYS.UNITS));
-            inDoc.setPropertyValue("imd:xresolution", dpi.getX());
-            inDoc.setPropertyValue("imd:yresolution", dpi.getY());
+            if (ok) {
+                // Store the values in the schema
+                inDoc.setPropertyValue("imd:pixel_xdimension",
+                        result.get(KEYS.WIDTH));
+                inDoc.setPropertyValue("imd:pixel_ydimension",
+                        result.get(KEYS.HEIGHT));
+                inDoc.setPropertyValue("imd:color_space",
+                        result.get(KEYS.COLORSPACE));
+
+                // Resolution needs extra work
+                XYResolutionDPI dpi = new XYResolutionDPI(
+                        result.get(KEYS.RESOLUTION), result.get(KEYS.UNITS));
+                inDoc.setPropertyValue("imd:xresolution", dpi.getX());
+                inDoc.setPropertyValue("imd:yresolution", dpi.getY());
+            }
         }
 
         // Save the document
-        if (save) {
+        if (ok && save) {
             session.saveDocument(inDoc);
         }
 
@@ -220,7 +238,7 @@ public class SavePictureMeadataInDocument {
         do {
             theType = t.getName();
             t = t.getSuperType();
-        } while(t != null);
+        } while (t != null);
 
         return theType;
     }
