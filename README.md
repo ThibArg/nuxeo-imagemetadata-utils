@@ -4,6 +4,9 @@ Last release: 1.2.0- 2014-11-13
 
 Current version: 1.2.0 (adding features)
 
+## IMPORTANT
+This plug-in will not be maintained as is. please, move to [nuxeo-binary-metadata](https://github.com/thibarg/nuxeo-binary-metadata), which contains more features: Select the tool you want to use (ImageMagick, GraphicsMagick, ExifTool), get metadata from any file type handled by the tool (for example get the number of slides in a .pptx presentation), and also _write_ metadata.
+
 ## About - Requirements
 `nuxeo-imagemetadata-utils` is a plug-in for the `nuxeo platform`. It allows to extract metadata stored in pictures and store these information in the document, for easy search, display and reporting. It uses the `ìm4java` tool for this purpose, which, itself, encapsulates calls to `ImageMagick` and, possibly, `ExifTool` and `GraphicsMagick`.
 
